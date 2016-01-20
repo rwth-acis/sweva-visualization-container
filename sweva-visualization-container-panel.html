@@ -1,0 +1,561 @@
+﻿<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-styles/typography.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../iron-icons/av-icons.html">
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../paper-menu/paper-menu.html">
+<link rel="import" href="../paper-item/paper-item.html">
+<link rel="import" href="../paper-tooltip/paper-tooltip.html">
+<link rel="import" href="../paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-progress/paper-progress.html">
+<link rel="import" href="../paper-tabs/paper-tabs.html">
+<link rel="import" href="../paper-tabs/paper-tab.html">
+<link rel="import" href="../iron-pages/iron-pages.html">
+<link rel="import" href="../paper-color-picker/paper-color-input.html">
+<link rel="import" href="../paper-button/paper-button.html">
+
+<link rel="import" href="sweva-visualization-container-section.html">
+
+<link rel="import" href="sweva-visualization-input-slider.html">
+<link rel="import" href="sweva-visualization-input-text.html">
+<link rel="import" href="sweva-visualization-input-number.html">
+<link rel="import" href="sweva-visualization-input-toggle.html">
+<link rel="import" href="sweva-visualization-input-dropdown.html">
+<!--
+An element providing a solution to no problem in particular.
+
+Example:
+
+    <seed-element></seed-element>
+
+Example:
+
+    <seed-element>
+      <h2>Hello seed-element</h2>
+    </seed-element>
+
+@demo demo/index.html
+@hero hero.svg
+-->
+<dom-module id="sweva-visualization-container-panel">
+    <template>
+
+        <style>
+            :host {
+                box-sizing: border-box;
+                width: 200px;
+                min-height: 200px;
+                box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+                color: #fff;
+                @apply(--paper-font-subhead);
+                transition: width cubic-bezier(0.18, 0.89, 0.32, 1.28) 0.2s;
+                background-color: #fff;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                --paper-tab-ink: #d10000;
+            }
+
+            paper-tabs, paper-toolbar {
+                background-color: #313131;
+                color: #fff;
+                --paper-tabs-selection-bar-color: #d10000;
+                --paper-tab-ink: #d10000;
+                height: 25px;
+            }
+
+            paper-tab.iron-selected {
+                background: #d10000;
+            }
+
+            #content {
+                color: #000;
+                position: relative;
+                height: 100%;
+                flex: 1 1;
+            }
+
+            iron-pages {
+                display: block;
+                overflow: auto;
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                top: 25px;
+            }
+
+            .container {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+
+            #header .hidden, #content.hidden {
+                display: none;
+            }
+
+            .presets {
+                display: flex;
+            }
+
+            .collaboration {
+                padding: 0 8px;
+            }
+
+            paper-toggle-button {
+                @apply(--paper-font-caption);
+                margin-bottom: 5px;
+            }
+
+            paper-color-input {
+                margin: 0 8px;
+            }
+
+            sweva-visualization-container-section paper-button {
+                margin: 8px;
+                width: calc(100% - 16px);
+                background: #313131;
+                color: #fff;
+            }
+
+            .presets paper-dropdown-menu {
+                padding: 0 8px;
+                flex: 1 1 0;
+            }
+
+            .presets paper-icon-button {
+                margin-top: 20px;
+            }
+
+            #header {
+                min-height: 40px;
+                background-color: #d10000;
+                color: #fff;
+                display: flex;
+            }
+
+                #header paper-icon-button {
+                    color: #fff;
+                }
+
+                #header .text {
+                    padding: 8px;
+                    flex: 1 1 0;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                }
+
+            #execution {
+                color: #000;
+                /*transition: transform linear .1s;*/
+                background: #fff;
+            }
+
+                #execution.hidden {
+                    transform-origin: bottom left;
+                    transform: rotate(90deg);
+                    height: 40px;
+                    top: 0;
+                    position: absolute;
+                    right: inherit;
+                    background: none;
+                }
+
+                    #execution.hidden paper-icon-button {
+                        transform: rotate(-90deg);
+                    }
+
+                #execution .execution-container {
+                    display: flex;
+                }
+
+            paper-dropdown-menu {
+                width: 100%;
+            }
+
+            paper-progress {
+                width: 100%;
+            }
+        </style>
+        <div id="header">
+            <div class$="text {{collapsedStyle}}">
+                {{label}}
+            </div>
+            <paper-icon-button title="Collapse"
+                               icon="icons:menu"
+                               on-click="handleCollapse">
+            </paper-icon-button>
+        </div>
+
+        <div id="content" class$="{{collapsedStyle}}">
+            <div>
+                <paper-tabs selected="{{selectedTab}}" noink no-bar>
+                    <paper-tab>Controls</paper-tab>
+                    <paper-tab>Chat</paper-tab>
+                    <paper-tab>Settings</paper-tab>
+                </paper-tabs>
+                <iron-pages selected="{{selectedTab}}">
+                    <div>
+                        <div id="sections">
+                        </div>
+                    </div>
+                    <div>Page 2</div>
+                    <div>
+                        <sweva-visualization-container-section label="Collaboration">
+                            <sweva-visualization-input-text label="Room"
+                                                            description="The name of the room to connect to."
+                                                            value="{{room}}">
+                            </sweva-visualization-input-text>
+                            <sweva-visualization-input-toggle label="Synchronization"
+                                                              description="When synchronized to the room, value changes will be shared among all room participants."
+                                                              value="{{connected}}">
+                            </sweva-visualization-input-toggle>
+                        </sweva-visualization-container-section>
+                        <sweva-visualization-container-section label="User">
+                            <sweva-visualization-input-text label="Name"
+                                                            description="Your name that will be displayed to others."
+                                                            value="{{username}}">
+                            </sweva-visualization-input-text>
+                            <div style="padding: 0 8px">
+                                <paper-color-input label="Color" value="{{usercolor}}">
+                                </paper-color-input>
+                            </div>
+                            <paper-button on-click="handleUserUpdateClick">Update</paper-button>
+                        </sweva-visualization-container-section>
+                        <sweva-visualization-container-section label="Chat">
+                            <sweva-visualization-input-toggle label="Text To Speech"
+                                                              description="Reads new chat messages."
+                                                              value="{{textToSpeech}}">
+                            </sweva-visualization-input-toggle>
+                        </sweva-visualization-container-section>
+                    </div>
+                </iron-pages>
+            </div>
+        </div>
+        <div id="execution" class$="{{collapsedStyle}}">
+            <paper-progress value="{{progress}}"></paper-progress>
+            <div class="execution-container">
+                <paper-icon-button title="Execute"
+                                   icon="av:play-arrow"
+                                   on-click="handleExecute">
+                </paper-icon-button>
+                <paper-toggle-button checked="{{autoExecute}}">Auto</paper-toggle-button>
+            </div>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: 'sweva-visualization-container-panel',
+
+            properties: {
+                label: {
+                    type: String,
+                    value: 'Panel'
+                },
+                input: {
+                    type: Object,
+                    value: {}
+                },
+
+                collapsed: {
+                    type: Boolean,
+                    value: false,
+                    observer: 'collapse'
+                },
+                collapsedStyle: {
+                    type: String,
+                    value: ''
+                },
+                room: {
+                    type: String,
+                    value: 'noroom'
+                },
+                connected: {
+                    type: Boolean,
+                    value: true
+                },
+                collaborative: {
+                    type: Boolean,
+                    value: true
+                },
+                selectedTab: {
+                    type: Number,
+                    value: 0
+                },
+                presets: {
+                    type: Array,
+                    value: []
+                },
+                username: {
+                    type: String,
+                    value: 'User',
+                },
+                usercolor: {
+                    type: Object,
+                    value: {
+                        red: 0,
+                        green: 150,
+                        blue: 136
+                    }
+                },
+                textToSpeech: {
+                    type: Boolean,
+                    value: false
+                },
+                sections: {
+                    type: Array,
+                    value: [],
+                    observer: 'sectionsChanged'
+                },
+                autoExecute: {
+                    type: Boolean,
+                    value: false
+                },
+                progress: {
+                    type: Number,
+                    value: 50
+                }
+            },
+
+            // Element Lifecycle
+
+            ready: function () {
+
+            },
+
+            attached: function () {
+
+                //this.say('Hello! How are you?');
+
+            },
+
+            detached: function () {
+
+            },
+            sectionsChanged: function () {
+                this.createSections(this.sections);
+            },
+            // Element Behavior
+            say: function (text) {
+                if (typeof window.speechSynthesis === 'undefined') {
+                    return;
+                }
+                window.speechSynthesis.cancel();
+                var msg = new SpeechSynthesisUtterance(text.substring(0, 100));
+                msg.lang = 'en-US';
+                window.speechSynthesis.speak(msg);
+            },
+            setUserColor: function (hex) {
+                function hexToRgb(hex) {
+                    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+                    var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+                    hex = hex.replace(shorthandRegex, function (m, r, g, b) {
+                        return r + r + g + g + b + b;
+                    });
+
+                    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                    return result ? {
+                        r: parseInt(result[1], 16),
+                        g: parseInt(result[2], 16),
+                        b: parseInt(result[3], 16)
+                    } : null;
+                }
+                var color = hexToRgb(hex);
+                var usercolor = {}
+                usercolor.red = color.r;
+                usercolor.green = color.g;
+                usercolor.blue = color.b;
+                this.querySelector('paper-color-input').value = usercolor;
+                this.querySelector('paper-color-input').ready();
+            },
+            handleUserUpdateClick: function () {
+                var color = "#" + ((1 << 24) + (this.usercolor.red << 16) + (this.usercolor.green << 8) + this.usercolor.blue).toString(16).slice(1)
+                console.log(color);
+            },
+            handleControlUpdated: function (event) {
+
+                var map = event.detail.map;
+                var value = event.detail.value;
+                this.inputUpdate(map, value);
+
+            },
+            inputUpdated: function () {
+                this.fire('inputchanged', this.input);
+            },
+            inputUpdate: function (map, value) {
+                if (typeof map !== 'string') {
+                    return;
+                }
+                if (typeof value === 'undefined') {
+                    return;
+                }
+
+                var mapParts = map.split('.');
+                var target = null;
+                if (mapParts[0] == 'input') {
+                    target = this.input;
+                }
+
+                if (target === null) {
+                    return;
+                }
+
+                for (var i = 1; i < mapParts.length - 1; i++) {
+                    var part = mapParts[i];
+
+                    if (!target.hasOwnProperty(part)) {
+                        target[part] = {};
+                    }
+
+                    target = target[part];
+                }
+
+                if (mapParts.length - 1 > 0) {
+                    target[mapParts[mapParts.length - 1]] = value;
+                }
+                else {
+                    target = value;
+                }
+                target = value;
+
+                var self = this;
+                this.debounce('inputDebounce', function () {
+                    self.inputUpdated();
+                }, 300);
+
+            },
+            createSections: function (sections) {
+                function setIfDefined(element, target, property) {
+                    if (typeof element[property] !== 'undefined') {
+                        target[property] = element[property];
+                    }
+                }
+                var container = this.$.sections;
+
+                // clean
+                var children = Polymer.dom(container).children;
+                for (var i = 0; i < children.length; i++) {
+                    Polymer.dom(container).removeChild(children[i]);
+                }
+                for (var i = 0; i < sections.length; i++) {
+                    var node = document.createElement('sweva-visualization-container-section');
+                    node.label = sections[i].label || ('Section ' + i);
+                    Polymer.dom(container).appendChild(node);
+
+                    for (var k = 0; k < sections[i].controls.length; k++) {
+                        var control = sections[i].controls[k];
+
+                        var child = null;
+                        switch (control.type.trim().toLowerCase()) {
+                            case 'slider':
+                                child = document.createElement('sweva-visualization-input-slider');
+                                child.addEventListener('controlupdated', this.handleControlUpdated.bind(this), false);
+                                setIfDefined(control, child, 'label');
+                                setIfDefined(control, child, 'map');
+                                setIfDefined(control, child, 'value');
+                                setIfDefined(control, child, 'description');
+                                setIfDefined(control, child, 'min');
+                                setIfDefined(control, child, 'max');
+                                setIfDefined(control, child, 'step');
+
+                                break;
+                            case 'toggle':
+                                child = document.createElement('sweva-visualization-input-toggle');
+                                child.addEventListener('controlupdated', this.handleControlUpdated.bind(this), false);
+                                setIfDefined(control, child, 'label');
+                                setIfDefined(control, child, 'description');
+                                setIfDefined(control, child, 'map');
+                                setIfDefined(control, child, 'value');
+
+                                break;
+                            case 'number':
+                                child = document.createElement('sweva-visualization-input-number');
+                                child.addEventListener('controlupdated', this.handleControlUpdated.bind(this), false);
+                                setIfDefined(control, child, 'label');
+                                setIfDefined(control, child, 'map');
+                                setIfDefined(control, child, 'value');
+                                setIfDefined(control, child, 'description');
+                                setIfDefined(control, child, 'min');
+                                setIfDefined(control, child, 'max');
+                                setIfDefined(control, child, 'step');
+
+                                break;
+                            case 'text':
+                                child = document.createElement('sweva-visualization-input-text');
+                                child.addEventListener('controlupdated', this.handleControlUpdated.bind(this), false);
+                                child.multiline = false;
+                                setIfDefined(control, child, 'label');
+                                setIfDefined(control, child, 'description');
+                                setIfDefined(control, child, 'map');
+                                setIfDefined(control, child, 'value');
+
+                                break;
+                            case 'dropdown':
+                                child = document.createElement('sweva-visualization-input-dropdown');
+                                child.addEventListener('controlupdated', this.handleControlUpdated.bind(this), false);
+
+                                setIfDefined(control, child, 'label');
+                                setIfDefined(control, child, 'map');
+                                setIfDefined(control, child, 'description');
+                                setIfDefined(control, child, 'items');
+                                child.selectedIndex = 0;
+
+                                break;
+                            case 'multiline':
+                                child = document.createElement('sweva-visualization-input-text');
+                                child.addEventListener('controlupdated', this.handleControlUpdated.bind(this), false);
+                                child.multiline = true;
+                                setIfDefined(control, child, 'label');
+                                setIfDefined(control, child, 'description');
+                                setIfDefined(control, child, 'map');
+                                setIfDefined(control, child, 'value');
+                                break;
+                            default:
+
+                        }
+
+                        if (child) {
+                            Polymer.dom(node).appendChild(child);
+                        }
+                    }
+                }
+                Polymer.dom.flush();
+            },
+            connectedText: function (connected) {
+                return connected ? 'Synchronized' : 'Unsynchronized';
+            },
+
+            collapse: function (collapsed) {
+                if (collapsed) {
+                    this.style.width = '40px';
+                    this.collapsedStyle = 'hidden';
+                }
+                else {
+                    this.style.width = '';
+                    this.collapsedStyle = '';
+                }
+            },
+            handleCollapse: function () {
+                this.collapsed = !this.collapsed;
+
+            },
+            handleShare: function () {
+
+            },
+            handleExecute: function () {
+                this.fire('executed', this.input);
+            },
+            updateProgress: function (progress) {
+                this.progress = progress;
+            },
+
+            resetProgress: function () {
+                this.progress = 0;
+            }
+
+        });
+    </script>
+</dom-module>

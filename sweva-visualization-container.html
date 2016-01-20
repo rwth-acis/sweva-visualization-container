@@ -1,0 +1,197 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="sweva-visualization-container-panel.html">
+<!--
+An element providing a solution to no problem in particular.
+
+Example:
+
+    <seed-element></seed-element>
+
+Example:
+
+    <seed-element>
+      <h2>Hello seed-element</h2>
+    </seed-element>
+
+@demo demo/index.html
+@hero hero.svg
+-->
+
+
+<dom-module id="sweva-visualization-container">
+    <template>
+
+        <style>
+            :host {
+                display: flex;
+                flex-direction: row;
+                box-sizing: border-box;
+                width: 100%;
+                height: 100%;
+                min-height: 300px;
+                border: 1px solid #808080;
+                position: relative;
+                font-family: 'Roboto', 'Noto', sans-serif;
+            }
+
+            #visualization-area {
+                flex: 1 1 0;
+                background: #ffffff;
+                overflow: overlay;
+            }
+        </style>
+        <div id="visualization-area">
+        </div>
+        <sweva-visualization-container-panel id="panel"
+                                             on-inputchanged="handleInputChanged"
+                                             on-executed="handleExecuted">
+        </sweva-visualization-container-panel>
+    </template>
+    <script src="http://127.0.0.1:8021/SWeVA-Core/app/core.build.js"></script>
+    <script>
+        Polymer({
+            is: 'sweva-visualization-container',
+
+            properties: {
+                toolUrl: {
+                    type: String,
+                    value: null
+                },
+                controls: {
+                    type: Array,
+                    value: []
+                },
+                input: {
+                    type: Object,
+                    value: {}
+                },
+                result: {
+                    type: Object,
+                    value: {}
+                },
+                executionManager: {
+                    type: Object,
+                    value: null
+                },
+                composition: {
+                    type: Object,
+                    value: {}
+                }
+            },
+
+            // Element Lifecycle
+
+            ready: function () {
+                this.executionManager = new sweva.ExecutionManager();
+                var self = this;
+                this.executionManager.onProgress(function (progress) {
+                    var panel = self.$.panel;
+                    panel.updateProgress(progress);
+                });
+            },
+
+            attached: function () {
+
+            },
+
+            detached: function () {
+
+            },
+
+           
+            // Element Behavior
+            handleExecuted: function (event) {
+                var self = this;
+                this.input = event.detail;
+                console.log(event.detail)
+                var panel = this.$.panel;
+                panel.resetProgress();
+
+               
+
+                this.executionManager.execute(
+                    {},
+                    this.input
+                    )
+                    .then(function (result) {
+                        self.result = result;
+                        console.log(result);
+                        self.updateVisualization();
+                       
+
+                    });
+            },
+            handleInputChanged: function (event) {
+                var input = event.detail;
+                this.input = input;
+                
+            },
+            load: function () {
+                this.executionManager.setup(this.composition);
+                this.$.panel.sections = controls;
+                this.loadVisualizationTool(this.toolUrl)
+                .then(function () {
+                    console.log('loaded');
+                })
+            },
+            updateVisualization: function(){
+                var visualization = this.querySelector('#visualization-tool');
+                visualization.data = this.result;
+            },
+            loadVisualizationTool: function (url) {
+                var self = this;
+                return new Promise(function (resolve, reject) {
+                    if (typeof url === 'undefined' || url === null) {
+                        reject();
+                    }
+                    var area = self.querySelector('#visualization-area');
+                    var children = Polymer.dom(area).children;
+                    for (var i = 0; i < children.length; i++) {
+                        Polymer.dom(area).removeChild(children[i]);
+                    }
+                    Polymer.dom.flush();
+
+                    self.importHref(url, function (e) {
+                        // e.target.import is the import document.
+                        var newElement = document.createElement('sweva-visualization-line-graph');
+                        //newElement.myProperty = 'foo';
+                        newElement.id = 'visualization-tool';
+
+
+                        var config = {
+                            label: "Monthly electricity production in Australia",
+                            ylabel: "million kilowatt hours",
+                            xlabel: "date",
+                            xtype: "date",
+                            ytype: "linear",
+                            xparse: "%Y-%m",
+                            yparse: "",
+                            xprint: "%m-%y",
+                            yprint: ""
+                        }
+
+                        
+
+                        Polymer.dom(area).appendChild(newElement);
+                        newElement.config = config;
+                        Polymer.dom.flush();
+                        resolve();
+                    },
+                    function (e) {
+                        reject(e);
+                    });
+                })
+            }
+
+        });
+    </script>
+</dom-module>

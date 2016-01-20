@@ -1,0 +1,239 @@
+﻿<!doctype html>
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>sweva-visualization-container Demo</title>
+    <script src="../../webcomponentsjs/webcomponents-lite.min.js"></script>
+    <link rel="import" href="../sweva-visualization-container.html">
+</head>
+<body unresolved>
+
+    <sweva-visualization-container>
+    </sweva-visualization-container>
+    <script>
+        var container = document.querySelector('sweva-visualization-container');
+        var url = 'http://127.0.0.1:8021/sweva-visualization-line-graph/dist/sweva-visualization-line-graph.html';
+        var controls = [
+            {
+                label: 'Ranges',
+                controls: [
+                    {
+                        label: 'year',
+                        type: 'text',
+                        map: 'input.RangeFilter.year'
+                    },
+                    
+                ]
+            },
+            {
+                label: 'View',
+                controls: [
+                    {
+                        label: 'Draw Lines',
+                        type: 'toggle',
+                        map: 'input.View.lines'
+                    },
+                    {
+                        label: 'Color',
+                        type: 'string',
+                        map: 'input.View.color'
+                    }
+                ]
+            }
+        ];
+        var composition = {
+            "type": "composition",
+            "name": "composition1",
+            "dataInNames": [],
+            "dataInSchema": {},
+            "dataOutNames": [
+                "result"
+            ],
+            "dataOutSchema": {},
+            "inputNames": [],
+            "inputSchema": {},
+            "mapDataIn": [
+                "function (data, composableName, composables, libs) {",
+                "if (data.hasOwnProperty(composableName)) {",
+                "return libs.get(data, composableName);",
+                "}",
+                "return null;",
+                "}"
+            ],
+            "mapDataOut": [
+                "function (output, libs) {",
+                "return output;",
+                "}"
+            ],
+            "mapInput": [
+                "function (input, moduleName, modules, libs) {",
+                "if (input.hasOwnProperty(moduleName)) {",
+                "return libs.get(input, moduleName);",
+                "}",
+                "",
+                "return null;",
+                "}"
+            ],
+            "composables": {
+                "Provider": {
+                    "type": "module",
+                    "name": "provider",
+                    "description": "A simple module template.",
+                    "dataInNames": [],
+                    "dataInSchema": {},
+                    "dataOutNames": [
+                        "data"
+                    ],
+                    "dataOutSchema": {},
+                    "inputNames": [],
+                    "inputSchema": {},
+                    "request": [
+                        "function (data, input, libs) {",
+                        "return libs.axios.get('http://localhost:8021/data.json');",
+                        "}"
+                    ]
+                },
+                "RangeFilter": {
+                    "type": "module",
+                    "name": "rangefilter",
+                    "description": "A simple module template.",
+                    "dataInNames": [
+                        "in"
+                    ],
+                    "dataInSchema": {},
+                    "dataOutNames": [
+                        "data"
+                    ],
+                    "dataOutSchema": {},
+                    "inputNames": [
+                        "year"
+                    ],
+                    "inputSchema": {},
+                    "compute": [
+                        "function (data, input, libs) {",
+                        "var d = new Array();",
+                        "for(var i=0; i< data.length; i++){",
+                        "var item = libs.get(data,i);",
+                        "if(input.year.length>0){",
+                        "if(libs.get(item,0).indexOf(input.year)==0){",
+                        "d.push(item);",
+                        "}",
+                        "}",
+                        "else{",
+                        "d.push(item);",
+                        "}",
+                        "}",
+                        "return {data:d};",
+                        "}"
+                    ]
+                },
+                "View": {
+                    "type": "module",
+                    "name": "graphview",
+                    "description": "A simple module template.",
+                    "dataInNames": [
+                        "in"
+                    ],
+                    "dataInSchema": {},
+                    "dataOutNames": [
+                        "result"
+                    ],
+                    "dataOutSchema": {},
+                    "inputNames": [
+                        "view"
+                    ],
+                    "inputSchema": {},
+                    "compute": [
+                        "function (data, input, libs) {",
+                        "var graph = new Array();",
+                        "graph.push({",
+                        "label: 'electricity',",
+                        "color: '#ff0000',",
+                        "type: input.lines?'lines':'dots',",
+                        "data: data",
+                        "});",
+                        "return graph;",
+                        "}"
+                    ]
+                }
+            },
+            "links": {
+                "Provider": [
+                    {
+                        "to": "RangeFilter",
+                        "mapping": {
+                            "data": "in"
+                        }
+                    }
+                ],
+                "RangeFilter": [
+                    {
+                        "to": "View",
+                        "mapping": {
+                            "data": "in"
+                        }
+                    }
+                ]
+            }
+        }
+
+        container.toolUrl = url;
+        container.controls = controls;
+        container.composition = composition;
+        container.load();
+       /* var controls = [
+            {
+                label: 'Section 1',
+                controls: [
+                    {
+                        label: 'Size',
+                        type: 'slider',
+                        description: 'Changes the size',
+                        min: -10,
+                        max: 10,
+                        value: 0,
+                        map: 'input.sizes.size'
+                    },
+                    {
+                        label: 'Filter',
+                        type: 'text',
+                        description: 'Changes the filter',
+                        value: '',
+                        map: 'input.filters.filter'
+                    },
+                    {
+                        label: 'Toggle',
+                        type: 'toggle',
+                        description: 'Changes the filter',
+                        value: false,
+                        map: 'input.filters.toggler'
+                    },
+                    {
+                        label: 'Selector',
+                        type: 'dropdown',
+                        description: 'Changes the dropdown',
+                        items: [
+                            'Hello',
+                            {
+                                label: 'asd',
+                                text: 'Banana'
+                            }
+                        ],
+                        map: 'input.selector'
+                    }
+                ]
+            }
+        ]*/
+    </script>
+</body>
+</html>

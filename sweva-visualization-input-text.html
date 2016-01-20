@@ -1,0 +1,90 @@
+﻿<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-input/paper-textarea.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-tooltip/paper-tooltip.html">
+<!--
+An element providing a solution to no problem in particular.
+
+Example:
+
+    <seed-element></seed-element>
+
+Example:
+
+    <seed-element>
+      <h2>Hello seed-element</h2>
+    </seed-element>
+
+@demo demo/index.html
+@hero hero.svg
+-->
+<dom-module id="sweva-visualization-input-text">
+    <template>
+        <style>
+            :host {
+            }
+            paper-input, paper-textarea{
+                padding: 0 8px;
+            }
+        </style>
+        <template is="dom-if" if="{{multiline}}">
+            <paper-textarea label="{{label}}" value="{{value}}" always-float-label></paper-textarea>
+        </template>
+        <template is="dom-if" if="{{!multiline}}">
+            <paper-input label="{{label}}" value="{{value}}" always-float-label></paper-input>
+        </template>
+        <paper-tooltip>{{description}}</paper-tooltip>
+    </template>
+    <script>
+        Polymer({
+            is: 'sweva-visualization-input-text',
+
+            properties: {
+                label: {
+                    type: String,
+                    value: 'Title'
+                },
+                multiline: {
+                    type: Boolean,
+                    value: false
+                },
+                description:{
+                    type: String,
+                    value: 'No description available.'
+                },
+                map: {
+                    type: String,
+                    value: ''
+                },
+                value: {
+                    type: String,
+                    value: '',
+                    observer: 'valueChanged'
+                }
+            },
+
+            // Element Lifecycle
+
+            ready: function () {
+
+            },
+
+            attached: function () {
+
+            },
+
+            detached: function () {
+
+            },
+
+            // Element Behavior
+            valueChanged: function () {
+                var self = this;
+                this.debounce('text-input', function () {
+                    self.fire('controlupdated', { map: self.map, value: self.value });
+                }, 300);               
+            }
+
+        });
+    </script>
+</dom-module>
