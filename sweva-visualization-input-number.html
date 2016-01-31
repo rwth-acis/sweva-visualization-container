@@ -27,7 +27,7 @@ Example:
                 padding: 0 8px;
             }
         </style>
-        <paper-input type="number" label="{{label}}" min="{{min}}" max="{{max}}" step="{{step}}" value="{{value}}" always-float-label></paper-input>
+        <paper-input type="number" label="{{label}}" min="{{min}}" max="{{max}}" step="{{step}}" value="{{value}}" on-change="valueChanged" always-float-label></paper-input>
         <paper-tooltip>{{description}}</paper-tooltip>
     </template>
     <script>
@@ -62,7 +62,8 @@ Example:
                 value: {
                     type: Number,
                     value: 0,
-                    observer: 'valueChanged'
+                    notify: true,
+                    //observer: 'valueChanged'
                 }
             },
 
@@ -73,7 +74,7 @@ Example:
             },
 
             attached: function () {
-
+                this.valueChanged();
             },
 
             detached: function () {

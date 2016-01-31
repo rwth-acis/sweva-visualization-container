@@ -28,10 +28,10 @@ Example:
             }
         </style>
         <template is="dom-if" if="{{multiline}}">
-            <paper-textarea label="{{label}}" value="{{value}}" always-float-label></paper-textarea>
+            <paper-textarea label="{{label}}" value="{{value}}" on-change="valueChanged" always-float-label></paper-textarea>
         </template>
         <template is="dom-if" if="{{!multiline}}">
-            <paper-input label="{{label}}" value="{{value}}" always-float-label></paper-input>
+            <paper-input label="{{label}}" value="{{value}}" on-change="valueChanged" always-float-label></paper-input>
         </template>
         <paper-tooltip>{{description}}</paper-tooltip>
     </template>
@@ -59,7 +59,8 @@ Example:
                 value: {
                     type: String,
                     value: '',
-                    observer: 'valueChanged'
+                    notify: true,
+                    //observer: 'valueChanged'
                 }
             },
 
@@ -70,7 +71,7 @@ Example:
             },
 
             attached: function () {
-
+                this.valueChanged();
             },
 
             detached: function () {

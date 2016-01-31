@@ -26,7 +26,13 @@ Example:
 @hero hero.svg
 -->
 
+<script src="../yjs/y.js"></script>
+<script src="../y-memory/y-memory.js"></script>
+<script src="../y-map/y-map.js"></script>
+<script src="../y-array/y-array.js"></script>
+<script src="../y-text/y-text.js"></script>
 
+<script src="y-websockets-client.js"></script>
 <dom-module id="sweva-visualization-container">
     <template>
 
@@ -53,10 +59,13 @@ Example:
         </div>
         <sweva-visualization-container-panel id="panel"
                                              on-inputchanged="handleInputChanged"
-                                             on-executed="handleExecuted">
+                                             on-roomchanged="handleRoomChanged"
+                                             on-executed="handleExecuted"
+                                             room="{{room}}">
+
         </sweva-visualization-container-panel>
     </template>
-    <script src="http://127.0.0.1:8021/SWeVA-Core/app/core.build.js"></script>
+    <script src="http://localhost:5001/core.build.js"></script>
     <script>
         Polymer({
             is: 'sweva-visualization-container',
@@ -82,9 +91,25 @@ Example:
                     type: Object,
                     value: null
                 },
+                yjs: {
+                    type: Object,
+                    value: null
+                },
                 composition: {
                     type: Object,
                     value: {}
+                },
+                room: {
+                    type: String,
+                    value: 'defaultSwevaVisRoom1'
+                },
+                visualizationUrlPrefix:{
+                    type: String,
+                    value: ' '
+                },
+                visualizationUrlSuffix:{
+                    type: String,
+                    value: ' '
                 }
             },
 
@@ -100,7 +125,7 @@ Example:
             },
 
             attached: function () {
-
+                this.init();
             },
 
             detached: function () {
@@ -109,10 +134,18 @@ Example:
 
            
             // Element Behavior
+            handleRoomChanged: function(event){
+                this.room = event.detail;
+              
+                this.yjs.connector.options.room = this.room;
+                this.yjs = null;
+                console.log(this.room)
+                this.init();
+            },
             handleExecuted: function (event) {
                 var self = this;
                 this.input = event.detail;
-                console.log(event.detail)
+                
                 var panel = this.$.panel;
                 panel.resetProgress();
 
@@ -124,7 +157,7 @@ Example:
                     )
                     .then(function (result) {
                         self.result = result;
-                        console.log(result);
+                        
                         self.updateVisualization();
                        
 
@@ -135,9 +168,23 @@ Example:
                 this.input = input;
                 
             },
-            load: function () {
+            load: function (composition) {
+
+                if(typeof composition === 'object'){
+                    this.composition = composition;
+                }
+
                 this.executionManager.setup(this.composition);
-                this.$.panel.sections = controls;
+                if (this.composition.controls) {
+                    this.$.panel.sections = this.composition.controls;
+                }
+                else {
+                    this.$.panel.sections = this.controls;
+                }
+                if (this.composition.visualization) {
+                    this.toolUrl = this.composition.visualization;
+                }
+
                 this.loadVisualizationTool(this.toolUrl)
                 .then(function () {
                     console.log('loaded');
@@ -145,7 +192,7 @@ Example:
             },
             updateVisualization: function(){
                 var visualization = this.querySelector('#visualization-tool');
-                visualization.data = this.result;
+                visualization.set(this.result);
             },
             loadVisualizationTool: function (url) {
                 var self = this;
@@ -160,6 +207,9 @@ Example:
                     }
                     Polymer.dom.flush();
 
+                    if (url.indexOf('http') != 0) {
+                        url = self.visualizationUrlPrefix + url + self.visualizationUrlSuffix;
+                    }
                     self.importHref(url, function (e) {
                         // e.target.import is the import document.
                         var newElement = document.createElement('sweva-visualization-line-graph');
@@ -167,22 +217,9 @@ Example:
                         newElement.id = 'visualization-tool';
 
 
-                        var config = {
-                            label: "Monthly electricity production in Australia",
-                            ylabel: "million kilowatt hours",
-                            xlabel: "date",
-                            xtype: "date",
-                            ytype: "linear",
-                            xparse: "%Y-%m",
-                            yparse: "",
-                            xprint: "%m-%y",
-                            yprint: ""
-                        }
-
-                        
 
                         Polymer.dom(area).appendChild(newElement);
-                        newElement.config = config;
+                       
                         Polymer.dom.flush();
                         resolve();
                     },
@@ -190,6 +227,37 @@ Example:
                         reject(e);
                     });
                 })
+            },
+            init: function () {
+                var self = this;
+                Y({
+                    db: {
+                        name: 'memory'
+                    },
+                    connector: {
+                        name: 'websockets-client',
+                        room: self.room//'swevavisualtest1'
+                        // debug: true,
+                        // url: 'http://127.0.0.1:2345'
+                    },
+                    sourceDir: /*'../../bower_components/',//*/'http://127.0.0.1:8021/yjs/bower_components',
+                    share: {
+                       
+                        chat: 'Array',
+                        input: 'Map',
+                        inputUpdates: 'Array'
+                       
+                    }
+                }).then(function (y) {
+                    self.yjs = y;
+                   
+                   
+                    var panel = self.$.panel;
+
+                    panel.init(y);
+
+                    console.log('loaded');
+                });
             }
 
         });

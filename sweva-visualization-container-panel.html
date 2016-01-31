@@ -17,12 +17,14 @@
 <link rel="import" href="../paper-button/paper-button.html">
 
 <link rel="import" href="sweva-visualization-container-section.html">
+<link rel="import" href="sweva-visualization-container-chat.html">
 
 <link rel="import" href="sweva-visualization-input-slider.html">
 <link rel="import" href="sweva-visualization-input-text.html">
 <link rel="import" href="sweva-visualization-input-number.html">
 <link rel="import" href="sweva-visualization-input-toggle.html">
 <link rel="import" href="sweva-visualization-input-dropdown.html">
+
 <!--
 An element providing a solution to no problem in particular.
 
@@ -56,6 +58,11 @@ Example:
                 flex-direction: column;
                 overflow: hidden;
                 --paper-tab-ink: #d10000;
+            }
+
+            .flex {
+                display: flex;
+                align-content: center;
             }
 
             paper-tabs, paper-toolbar {
@@ -158,6 +165,7 @@ Example:
                     transform-origin: bottom left;
                     transform: rotate(90deg);
                     height: 40px;
+                    width: 200px;
                     top: 0;
                     position: absolute;
                     right: inherit;
@@ -179,7 +187,47 @@ Example:
             paper-progress {
                 width: 100%;
             }
+
+            #indicator {
+                display: block;
+                width: 200px;
+                height: 65px;
+                background: #313131;
+                position: absolute;
+                right: 200px;
+                padding: 8px;
+                box-sizing: border-box;
+                overflow: hidden;
+                pointer-events: none;
+                opacity: 0;
+                transition: opacity linear 300ms;
+            }
+
+                #indicator .title, #indicator .text {
+                    font-size: 12px;
+                    font-weight: 400;
+                    letter-spacing: 0.011em;
+                    line-height: 20px;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+
+                #indicator .title {
+                    font-weight: 500;
+                }
+
+                #indicator.hidden {
+                    right: 40px;
+                }
+
+                #indicator.opaque {
+                    opacity: .8 !important;
+                }
         </style>
+        <div id="indicator" class$="{{indicatorVisible}} {{collapsedStyle}}">
+            <div class="title">{{indicatorTitle}}</div>
+            <div class="text">{{indicatorText}}</div>
+        </div>
         <div id="header">
             <div class$="text {{collapsedStyle}}">
                 {{label}}
@@ -202,16 +250,26 @@ Example:
                         <div id="sections">
                         </div>
                     </div>
-                    <div>Page 2</div>
+                    <div style="height:100%">
+
+                        <sweva-visualization-container-chat on-newmessage="handleNewChatMessage"></sweva-visualization-container-chat>
+                    </div>
                     <div>
                         <sweva-visualization-container-section label="Collaboration">
-                            <sweva-visualization-input-text label="Room"
-                                                            description="The name of the room to connect to."
-                                                            value="{{room}}">
-                            </sweva-visualization-input-text>
+                            <div class="flex">
+                                <sweva-visualization-input-text label="Room"
+                                                                description="The name of the room to connect to."
+                                                                value="{{room}}">
+                                </sweva-visualization-input-text>
+                                <paper-icon-button title="Switch"
+                                                   icon="icons:open-in-new"
+                                                   on-click="handleSwitchRoom">
+                                </paper-icon-button>
+                            </div>
                             <sweva-visualization-input-toggle label="Synchronization"
+                                                              id="toggleConnected"
                                                               description="When synchronized to the room, value changes will be shared among all room participants."
-                                                              value="{{connected}}">
+                                                              on-iron-change="handleRoomConnectedToggle">
                             </sweva-visualization-input-toggle>
                         </sweva-visualization-container-section>
                         <sweva-visualization-container-section label="User">
@@ -227,8 +285,9 @@ Example:
                         </sweva-visualization-container-section>
                         <sweva-visualization-container-section label="Chat">
                             <sweva-visualization-input-toggle label="Text To Speech"
+                                                              id="toggleTTS"
                                                               description="Reads new chat messages."
-                                                              value="{{textToSpeech}}">
+                                                              on-iron-change="handleTTSToggle">
                             </sweva-visualization-input-toggle>
                         </sweva-visualization-container-section>
                     </div>
@@ -242,7 +301,11 @@ Example:
                                    icon="av:play-arrow"
                                    on-click="handleExecute">
                 </paper-icon-button>
-                <paper-toggle-button checked="{{autoExecute}}">Auto</paper-toggle-button>
+                <sweva-visualization-input-toggle label="Auto Run"
+                                                  id="toggleAutoExecute"
+                                                  description="Automatically updates visualization after changes."
+                                                  on-iron-change="handleAutoExecuteToggle">
+                </sweva-visualization-input-toggle>
             </div>
         </div>
     </template>
@@ -312,11 +375,27 @@ Example:
                 },
                 autoExecute: {
                     type: Boolean,
-                    value: false
+                    value: true
                 },
                 progress: {
                     type: Number,
                     value: 50
+                },
+                yjs: {
+                    type: Object,
+                    value: null
+                },
+                indicatorVisible: {
+                    type: String,
+                    value: ''
+                },
+                indicatorTitle: {
+                    type: String,
+                    value: ''
+                },
+                indicatorText: {
+                    type: String,
+                    value: ''
                 }
             },
 
@@ -328,8 +407,53 @@ Example:
 
             attached: function () {
 
-                //this.say('Hello! How are you?');
+                if (typeof localStorage['enableTTS'] !== 'undefined' && localStorage['enableTTS'] != null) {
 
+                    this.textToSpeech = localStorage['enableTTS'] == 'true';
+                    this.$.toggleTTS.value = this.textToSpeech;
+
+                }
+                else {
+                    localStorage['enableTTS'] = this.textToSpeech;
+                }
+
+                if (typeof localStorage['userName'] !== 'undefined' && localStorage['userName'] != null) {
+                    this.username = localStorage['userName'];
+                }
+                else {
+                    localStorage['userName'] = this.username;
+                }
+
+                if (typeof localStorage['userColor'] !== 'undefined' && localStorage['userColor'] != null) {
+                    this.setUserColor(localStorage['userColor']);
+                }
+                else {
+                    localStorage['userColor'] = this.usercolor;
+                }
+
+                if (typeof localStorage['autoExecute'] !== 'undefined' && localStorage['autoExecute'] != null) {
+                    this.autoExecute = localStorage['autoExecute'] == 'true';
+                    this.$.toggleAutoExecute.value = this.autoExecute;
+                }
+                else {
+                    localStorage['autoExecute'] = this.autoExecute;
+                }
+
+                if (typeof localStorage['connected'] !== 'undefined' && localStorage['connected'] != null) {
+                    this.connected = localStorage['connected'] == 'true';
+                    this.$.toggleConnected.value = this.connected;
+                }
+                else {
+                    localStorage['connected'] = this.connected;
+                }
+
+                if (typeof localStorage['room'] !== 'undefined' && localStorage['room'] != null) {
+                    //this.room = localStorage['room'];
+                }
+                else {
+                    localStorage['room'] = this.room;
+                }
+                this.handleUserUpdateClick();
             },
 
             detached: function () {
@@ -372,8 +496,44 @@ Example:
                 this.querySelector('paper-color-input').ready();
             },
             handleUserUpdateClick: function () {
-                var color = "#" + ((1 << 24) + (this.usercolor.red << 16) + (this.usercolor.green << 8) + this.usercolor.blue).toString(16).slice(1)
-                console.log(color);
+                var color = "#" + ((1 << 24) + (this.usercolor.red << 16) + (this.usercolor.green << 8) + this.usercolor.blue).toString(16).slice(1);
+
+                localStorage['userName'] = this.username;
+                localStorage['userColor'] = color;
+
+                var chat = this.$$('sweva-visualization-container-chat');
+                if (chat) {
+                    chat.updateUser({ name: this.username, color: color });
+                }
+
+            },
+            handleNewChatMessage: function (event) {
+                var name = event.detail.name;
+                var message = event.detail.message;
+                var timestamp = event.detail.timestamp;
+                if (timestamp + 10000 > Date.now()) {
+
+                    if (this.textToSpeech && (this.selectedTab != 1 || this.collapsed)) {//not in chat window
+                        this.showindicator(name, message);
+                        this.say(name + ' ' + message);
+                    }
+
+                }
+
+                //this.say(message);
+
+            },
+            showindicator: function (title, text) {
+                this.indicatorVisible = 'opaque';
+                this.indicatorTitle = title;
+                this.indicatorText = text;
+                if (this.indicatorTimer) {
+                    clearTimeout(this.indicatorTimer);
+                }
+                var self = this;
+                this.indicatorTimer = setTimeout(function () {
+                    self.indicatorVisible = '';
+                }, 2000);
             },
             handleControlUpdated: function (event) {
 
@@ -382,49 +542,109 @@ Example:
                 this.inputUpdate(map, value);
 
             },
+            handleTTSToggle: function (event) {
+                this.textToSpeech = event.target.checked;
+                localStorage['enableTTS'] = this.textToSpeech;
+            },
+            handleAutoExecuteToggle: function (event) {
+                this.autoExecute = event.target.checked;
+                localStorage['autoExecute'] = this.autoExecute;
+            },
+            handleRoomConnectedToggle: function (event) {
+                this.connected = event.target.checked;
+                localStorage['connected'] = this.connected;
+                if (this.connected && this.yjs) {
+                    this.inputInitialized = false;
+                    var input = this.yjs.share.input.get('json');
+                    if (typeof input !== 'undefined') {
+                        var obj = JSON.parse(input);
+                        this.updateControls(obj);
+                        this.inputInitialized = true;
+                    }
+                }
+            },
+            handleSwitchRoom: function () {
+                localStorage['room'] = this.room;
+                this.fire('roomchanged', this.room);
+            },
             inputUpdated: function () {
+                if (this.yjs && this.connected && this.inputInitialized) {
+                    var inputJSON = JSON.stringify(this.input);
+                   // if (this.yjs.share.input.get('json)') != inputJSON) {
+
+
+                        this.yjs.share.input.set('json', inputJSON);
+                   // }
+                }
+
+                if (this.autoExecute) {
+                    this.handleExecute();
+                }
                 this.fire('inputchanged', this.input);
             },
-            inputUpdate: function (map, value) {
-                if (typeof map !== 'string') {
+            inputUpdate: function (maps, value, fromYjs) {
+
+                if (typeof maps !== 'object' || !Array.isArray(maps)) {
                     return;
                 }
                 if (typeof value === 'undefined') {
                     return;
                 }
+                for (var i = 0; i < maps.length; i++) {
 
-                var mapParts = map.split('.');
-                var target = null;
-                if (mapParts[0] == 'input') {
-                    target = this.input;
-                }
+                    var map = maps[i];
 
-                if (target === null) {
-                    return;
-                }
-
-                for (var i = 1; i < mapParts.length - 1; i++) {
-                    var part = mapParts[i];
-
-                    if (!target.hasOwnProperty(part)) {
-                        target[part] = {};
+                    if (typeof map !== 'string') {
+                        continue;
                     }
 
-                    target = target[part];
-                }
+                    var mapParts = map.split('.');
+                    var target = null;
+                    if (mapParts[0] == 'input') {
+                        target = this.input;
+                    }
 
-                if (mapParts.length - 1 > 0) {
-                    target[mapParts[mapParts.length - 1]] = value;
-                }
-                else {
+                    if (target === null) {
+                        return;
+                    }
+
+                    for (var i = 1; i < mapParts.length - 1; i++) {
+                        var part = mapParts[i];
+
+                        if (!target.hasOwnProperty(part)) {
+                            target[part] = {};
+                        }
+
+                        target = target[part];
+                    }
+
+                    if (mapParts.length - 1 > 0) {
+                        target[mapParts[mapParts.length - 1]] = value;
+                    }
+                    else {
+                        target = value;
+                    }
                     target = value;
-                }
-                target = value;
 
-                var self = this;
-                this.debounce('inputDebounce', function () {
-                    self.inputUpdated();
-                }, 300);
+                    var self = this;
+
+                    if (typeof fromYjs === 'undefined' || !fromYjs) {
+
+                        if (this.yjs && this.connected) {
+
+                            if (this.yjs.share.inputUpdates.length >= 10) {
+
+                                this.yjs.share.inputUpdates.delete(0);
+                            }
+                            
+                            this.yjs.share.inputUpdates.insert(this.yjs.share.inputUpdates.length, [{ map: map, value: value }]);
+                        }
+                    }
+
+                    this.debounce('inputDebounce', function () {
+                        self.inputUpdated();
+                    }, 800);
+                }
 
             },
             createSections: function (sections) {
@@ -453,6 +673,7 @@ Example:
                             case 'slider':
                                 child = document.createElement('sweva-visualization-input-slider');
                                 child.addEventListener('controlupdated', this.handleControlUpdated.bind(this), false);
+
                                 setIfDefined(control, child, 'label');
                                 setIfDefined(control, child, 'map');
                                 setIfDefined(control, child, 'value');
@@ -554,6 +775,119 @@ Example:
 
             resetProgress: function () {
                 this.progress = 0;
+            },
+            createMapValueListFromInputObject: function (obj, currentMap, result) {
+
+                if (Array.isArray(obj)) {
+                    result.push({ map: currentMap, value: obj });
+                }
+                else {
+                    for (var key in obj) {
+                        if (obj.hasOwnProperty(key)) {
+                            var map = currentMap + '.' + key;
+                            if (typeof obj[key] === 'object') {
+                                this.createMapValueListFromInputObject(obj[key], map, result);
+                            }
+                            else {
+                                result.push({ map: map, value: obj[key] });
+                            }
+                        }
+                    }
+                }
+            },
+            updateControls: function (input) {
+                this.input = input;
+                var mappings = [];
+                this.createMapValueListFromInputObject(input, 'input', mappings);
+
+                for (var i = 0; i < mappings.length; i++) {
+
+                    this.appendInputUpdate(mappings[i]);
+                }
+
+            },
+            init: function (yjs) {
+                this.yjs = yjs;
+                this.inputInitialized = false;
+                var self = this;
+                yjs.share.inputUpdates.observe(function (events) {
+                   
+                    if (self.inputInitialized && self.connected) {
+
+                        for (var i = 0; i < events.length; i++) {
+
+                            if (events[i].type === 'insert') {
+
+                                self.appendInputUpdate(events[i].value);
+                            }
+                        }
+                    }
+                    // concurrent insertions may result in a history > 7, so cleanup here
+                    self.cleanupInputUpdates();
+                });
+
+                yjs.share.input.observe(function (events) {
+                    
+                    if (self.connected) {
+
+                        for (var i = 0; i < events.length; i++) {
+
+                            if (events[i].type !== 'delete') {
+                                
+                                if (!self.inputInitialized) {
+                                    var input = yjs.share.input.get('json')
+                                    if (typeof input !== 'undefined') {
+                                        
+                                        var obj = JSON.parse(input);
+                                        console.dir(obj);
+                                        self.updateControls(obj);
+                                        self.inputInitialized = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                });
+
+                setTimeout(function () {
+                    if (typeof yjs.share.input.get('json') === 'undefined') {
+                        self.inputInitialized = true;
+                        
+                    }                    
+                }, 2000);
+
+                var chat = this.$$('sweva-visualization-container-chat');
+                if (chat) {
+                    chat.init(yjs);
+                }
+            },
+            appendInputUpdate: function (element) {
+                var container = this.$.sections;
+                var sections = Polymer.dom(container).children;
+
+                for (var i = 0; i < sections.length; i++) {
+                    var section = sections[i];
+                    var children = Polymer.dom(section).children;
+
+                    for (var k = 0; k < children.length; k++) {
+                        var child = children[k];
+                        if (child.map == element.map) {
+                            if (child.value != element.value) {
+                                child.value = element.value;
+                                this.inputUpdate([element.map], element.value, true);
+                            }
+                            return;
+                        }
+                    }
+                }
+
+            },
+            cleanupInputUpdates: function () {
+                var len;
+                while ((len = this.yjs.share.inputUpdates.length) > 10) {
+                    this.yjs.share.inputUpdates.delete(0);
+                }
             }
 
         });

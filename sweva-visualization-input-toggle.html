@@ -29,7 +29,7 @@ Example:
                 color: #737373;
             }
         </style>
-        <paper-toggle-button checked="{{value}}">{{label}}</paper-toggle-button>
+        <paper-toggle-button checked="{{value}}" on-change="valueChanged">{{label}}</paper-toggle-button>
         <paper-tooltip>{{description}}</paper-tooltip>
     </template>
     <script>
@@ -52,7 +52,8 @@ Example:
                 value: {
                     type: Boolean,
                     value: false,
-                    observer: 'valueChanged'
+                    notify: true,
+                    //observer: 'valueChanged'
                 }
             },
 
@@ -63,7 +64,7 @@ Example:
             },
 
             attached: function () {
-                this.fire('controlupdated', { map: this.map, value: this.value });
+                this.valueChanged();
             },
 
             detached: function () {
@@ -71,7 +72,7 @@ Example:
             },
 
             // Element Behavior
-            valueChanged: function () {
+            valueChanged: function () {                
                 this.fire('controlupdated', { map: this.map, value: this.value });
             }
 

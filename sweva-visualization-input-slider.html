@@ -39,6 +39,7 @@ Example:
                       max="{{max}}"                      
                       step="{{step}}"
                       editable
+                      on-change="valueChanged"
                       >
         </paper-slider>
         <paper-tooltip>{{description}}</paper-tooltip>
@@ -75,7 +76,8 @@ Example:
                 value: {
                     type: Number,
                     value: 50,
-                    observer: 'valueChanged'
+                    notify: true,
+                    //observer: 'valueChanged'
                 }
             },
 
@@ -86,7 +88,7 @@ Example:
             },
 
             attached: function () {
-
+                this.valueChanged();
             },
 
             detached: function () {

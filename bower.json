@@ -34,7 +34,13 @@
     "paper-tabs": "PolymerElements/paper-tabs#^1.0.0",
     "iron-pages": "PolymerElements/iron-pages#^1.0.0",
     "paper-button": "PolymerElements/paper-button#^1.0.0",
-    "paper-color-picker": "https://github.com/AlexRuppert/paper-color-picker.git#float-offset-fix"
+    "paper-color-picker": "https://github.com/AlexRuppert/paper-color-picker.git#float-offset-fix",
+
+    "y-memory": "^0.6.2",
+    "yjs": "^0.7.3",
+    "y-map": "^0.7.1",
+    "y-text": "^0.7",
+    "y-array": "^0.7"
 
   },
   "devDependencies": {

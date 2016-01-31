@@ -18,7 +18,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 </head>
 <body unresolved>
 
-    <sweva-visualization-container>
+    <sweva-visualization-container room="swevavisualtest5"
+                                   visualization-url-prefix="http://127.0.0.1:8021/sweva-visualization-line-graph/dist/"
+                                   visualization-url-suffix=".html">
     </sweva-visualization-container>
     <script>
         var container = document.querySelector('sweva-visualization-container');
@@ -30,7 +32,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     {
                         label: 'year',
                         type: 'text',
-                        map: 'input.RangeFilter.year'
+                        map: ['input.RangeFilter.year']
                     },
                     
                 ]
@@ -41,12 +43,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     {
                         label: 'Draw Lines',
                         type: 'toggle',
-                        map: 'input.View.lines'
+                        map: ['input.View.lines']
                     },
                     {
                         label: 'Color',
                         type: 'string',
-                        map: 'input.View.color'
+                        map: ['input.View.color']
                     }
                 ]
             }
@@ -162,7 +164,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         "type: input.lines?'lines':'dots',",
                         "data: data",
                         "});",
-                        "return graph;",
+                        "var config = {",
+                        "label: 'Monthly electricity production in Australia',",
+                        "ylabel: 'million kilowatt hours',",
+                        "xlabel: 'date',",
+                        "xtype: 'date',",
+                        "ytype: 'linear',",
+                        "xparse: '%Y-%m',",
+                        "yparse: '',",
+                        "xprint: '%m-%y',",
+                        "yprint: ''",
+                        "};",
+                        "return {config:config, data:graph};",
                         "}"
                     ]
                 }
@@ -187,10 +200,182 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             }
         }
 
-        container.toolUrl = url;
-        container.controls = controls;
+        //container.toolUrl = url;
+        //container.controls = controls;
+
+        composition = {
+            "type": "composition",
+            "name": "composition1",
+            "dataInNames": [],
+            "dataInSchema": {},
+            "dataOutNames": [
+                "result"
+            ],
+            "dataOutSchema": {},
+            "inputNames": [],
+            "inputSchema": {},
+            "mapDataIn": [
+                "function (data, composableName, composables, libs) {",
+                "if (data.hasOwnProperty(composableName)) {",
+                "return libs.get(data, composableName);",
+                "}",
+                "return null;",
+                "}"
+            ],
+            "mapDataOut": [
+                "function (output, libs) {",
+                "return output;",
+                "}"
+            ],
+            "mapInput": [
+                "function (input, moduleName, modules, libs) {",
+                "if (input.hasOwnProperty(moduleName)) {",
+                "return libs.get(input, moduleName);",
+                "}",
+                "return null;",
+                "}"
+            ],
+            "controls": [
+                {
+                    "label": "Main",
+                    "controls": [
+                        {
+                            "type": "number",
+                            "label": "Year",
+                            "description": "",
+                            "value": "1990",
+                            "min": "1956",
+                            "max": "1994",
+                            "map": [
+                                "input.RangeFilter.year"
+                            ]
+                        },
+                        {
+                            "type": "toggle",
+                            "label": "Draw Line",
+                            "description": "",
+                            "value": true,
+                            "map": [
+                                "input.View.lines"
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "composables": {
+                "Provider": {
+                    "type": "module",
+                    "name": "provider",
+                    "description": "A simple module template.",
+                    "dataInNames": [],
+                    "dataInSchema": {},
+                    "dataOutNames": [
+                        "data"
+                    ],
+                    "dataOutSchema": {},
+                    "inputNames": [],
+                    "inputSchema": {},
+                    "request": [
+                        "function (data, input, libs) {",
+                        "return libs.axios.get('http://localhost:8021/data.json');",
+                        "}"
+                    ]
+                },
+                "RangeFilter": {
+                    "type": "module",
+                    "name": "rangefilter",
+                    "description": "A simple module template.",
+                    "dataInNames": [
+                        "in"
+                    ],
+                    "dataInSchema": {},
+                    "dataOutNames": [
+                        "data"
+                    ],
+                    "dataOutSchema": {},
+                    "inputNames": [
+                        "year"
+                    ],
+                    "inputSchema": {},
+                    "compute": [
+                        "function (data, input, libs) {",
+                        "var d = new Array();",
+                        "for(var i=0; i< data.length; i++){",
+                        "var item = libs.get(data,i);",
+                        "if(input.year.length>0){",
+                        "if(libs.get(item,0).indexOf(input.year)==0){",
+                        "d.push(item);",
+                        "}",
+                        "}",
+                        "else{",
+                        "d.push(item);",
+                        "}",
+                        "}",
+                        "return {data:d};",
+                        "}"
+                    ]
+                },
+                "View": {
+                    "type": "module",
+                    "name": "graphview",
+                    "description": "A simple module template.",
+                    "dataInNames": [
+                        "in"
+                    ],
+                    "dataInSchema": {},
+                    "dataOutNames": [
+                        "result"
+                    ],
+                    "dataOutSchema": {},
+                    "inputNames": [
+                        "lines"
+                    ],
+                    "inputSchema": {},
+                    "compute": [
+                        "function (data, input, libs) {",
+                        "var graph = new Array();",
+                        "graph.push({",
+                        "label: 'electricity',",
+                        "color: '#ff0000',",
+                        "type: input.lines?'lines':'dots',",
+                        "data: data",
+                        "});",
+                        "var config = {",
+                        "label: 'Monthly electricity production in Australia',",
+                        "ylabel: 'million kilowatt hours',",
+                        "xlabel: 'date',",
+                        "xtype: 'date',",
+                        "ytype: 'linear',",
+                        "xparse: '%Y-%m',",
+                        "xprint: '%m-%y',",
+                        "};",
+                        "return {config:config, data:graph};",
+                        "}"
+                    ]
+                }
+            },
+            "links": {
+                "Provider": [
+                    {
+                        "to": "RangeFilter",
+                        "mapping": {
+                            "data": "in"
+                        }
+                    }
+                ],
+                "RangeFilter": [
+                    {
+                        "to": "View",
+                        "mapping": {
+                            "data": "in"
+                        }
+                    }
+                ]
+            },
+            "visualization": "sweva-visualization-line-graph"
+        }
         container.composition = composition;
-        container.load();
+        container.load(composition);
        /* var controls = [
             {
                 label: 'Section 1',
