@@ -24,35 +24,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </sweva-visualization-container>
     <script>
         var container = document.querySelector('sweva-visualization-container');
-        var url = 'http://127.0.0.1:8021/sweva-visualization-line-graph/dist/sweva-visualization-line-graph.html';
-        var controls = [
-            {
-                label: 'Ranges',
-                controls: [
-                    {
-                        label: 'year',
-                        type: 'text',
-                        map: ['input.RangeFilter.year']
-                    },
-                    
-                ]
-            },
-            {
-                label: 'View',
-                controls: [
-                    {
-                        label: 'Draw Lines',
-                        type: 'toggle',
-                        map: ['input.View.lines']
-                    },
-                    {
-                        label: 'Color',
-                        type: 'string',
-                        map: ['input.View.color']
-                    }
-                ]
-            }
-        ];
+       
         var composition = {
             "type": "composition",
             "name": "composition1",
@@ -374,51 +346,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             },
             "visualization": "sweva-visualization-line-graph"
         }
-        container.composition = composition;
-        container.load(composition);
-       /* var controls = [
-            {
-                label: 'Section 1',
-                controls: [
-                    {
-                        label: 'Size',
-                        type: 'slider',
-                        description: 'Changes the size',
-                        min: -10,
-                        max: 10,
-                        value: 0,
-                        map: 'input.sizes.size'
-                    },
-                    {
-                        label: 'Filter',
-                        type: 'text',
-                        description: 'Changes the filter',
-                        value: '',
-                        map: 'input.filters.filter'
-                    },
-                    {
-                        label: 'Toggle',
-                        type: 'toggle',
-                        description: 'Changes the filter',
-                        value: false,
-                        map: 'input.filters.toggler'
-                    },
-                    {
-                        label: 'Selector',
-                        type: 'dropdown',
-                        description: 'Changes the dropdown',
-                        items: [
-                            'Hello',
-                            {
-                                label: 'asd',
-                                text: 'Banana'
-                            }
-                        ],
-                        map: 'input.selector'
-                    }
-                ]
-            }
-        ]*/
+        
+        container.addEventListener('initialized', function () { container.load(composition);},false)
+        
+       
+       
     </script>
 </body>
 </html>

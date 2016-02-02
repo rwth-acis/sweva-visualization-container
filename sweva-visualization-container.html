@@ -187,7 +187,7 @@ Example:
 
                 this.loadVisualizationTool(this.toolUrl)
                 .then(function () {
-                    console.log('loaded');
+                    console.log('all loaded');
                 })
             },
             updateVisualization: function(){
@@ -256,7 +256,7 @@ Example:
 
                     panel.init(y);
 
-                    console.log('loaded');
+                    self.fire('initialized');
                 });
             }
 
