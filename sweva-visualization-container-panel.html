@@ -56,7 +56,8 @@ Example:
                 background-color: #fff;
                 display: flex;
                 flex-direction: column;
-                overflow: hidden;
+                
+                z-index: 1;
                 --paper-tab-ink: #d10000;
             }
 
@@ -82,6 +83,7 @@ Example:
                 position: relative;
                 height: 100%;
                 flex: 1 1;
+                overflow: hidden;
             }
 
             iron-pages {
@@ -257,14 +259,14 @@ Example:
                     <div>
                         <sweva-visualization-container-section label="Collaboration">
                             <div class="flex">
-                                <sweva-visualization-input-text label="Room"
+                                <!--<sweva-visualization-input-text label="Room"
                                                                 description="The name of the room to connect to."
                                                                 value="{{room}}">
                                 </sweva-visualization-input-text>
                                 <paper-icon-button title="Switch"
                                                    icon="icons:open-in-new"
                                                    on-click="handleSwitchRoom">
-                                </paper-icon-button>
+                                </paper-icon-button>-->
                             </div>
                             <sweva-visualization-input-toggle label="Synchronization"
                                                               id="toggleConnected"
@@ -325,7 +327,7 @@ Example:
 
                 collapsed: {
                     type: Boolean,
-                    value: false,
+                    value: true,
                     observer: 'collapse'
                 },
                 collapsedStyle: {
@@ -396,6 +398,10 @@ Example:
                 indicatorText: {
                     type: String,
                     value: ''
+                },
+                updateHistory: {
+                    type: Object,
+                    value: {}
                 }
             },
 
@@ -492,8 +498,8 @@ Example:
                 usercolor.red = color.r;
                 usercolor.green = color.g;
                 usercolor.blue = color.b;
-                this.querySelector('paper-color-input').value = usercolor;
-                this.querySelector('paper-color-input').ready();
+                this.$$('paper-color-input').value = usercolor;
+                this.$$('paper-color-input').ready();
             },
             handleUserUpdateClick: function () {
                 var color = "#" + ((1 << 24) + (this.usercolor.red << 16) + (this.usercolor.green << 8) + this.usercolor.blue).toString(16).slice(1);
@@ -536,10 +542,23 @@ Example:
                 }, 2000);
             },
             handleControlUpdated: function (event) {
-
-                var map = event.detail.map;
+               
+                var map = event.detail.map;                
                 var value = event.detail.value;
-                this.inputUpdate(map, value);
+                
+                if (this.updateHistory.hasOwnProperty(map)) {
+                    if (this.updateHistory[map] != value) {
+                        this.updateHistory[map] = value;
+                       
+                        this.inputUpdate(map, value);
+                    }
+                }
+                else {
+                    this.updateHistory[map] = value;
+                    this.inputUpdate(map, value, true);
+                }
+                
+               
 
             },
             handleTTSToggle: function (event) {
@@ -576,10 +595,11 @@ Example:
                         this.yjs.share.input.set('json', inputJSON);
                    // }
                 }
-
-                if (this.autoExecute) {
+                
+                if (this.autoExecute) {                    
                     this.handleExecute();
                 }
+                //console.log(JSON.stringify(this.input, null, 2));
                 this.fire('inputchanged', this.input);
             },
             inputUpdate: function (maps, value, fromYjs) {
@@ -591,9 +611,9 @@ Example:
                     return;
                 }
                 for (var i = 0; i < maps.length; i++) {
-
+                   
                     var map = maps[i];
-
+                   
                     if (typeof map !== 'string') {
                         continue;
                     }
@@ -605,11 +625,11 @@ Example:
                     }
 
                     if (target === null) {
-                        return;
+                        continue;
                     }
 
-                    for (var i = 1; i < mapParts.length - 1; i++) {
-                        var part = mapParts[i];
+                    for (var k = 1; k < mapParts.length - 1; k++) {
+                        var part = mapParts[k];
 
                         if (!target.hasOwnProperty(part)) {
                             target[part] = {};
@@ -640,10 +660,10 @@ Example:
                             this.yjs.share.inputUpdates.insert(this.yjs.share.inputUpdates.length, [{ map: map, value: value }]);
                         }
                     }
-
+                    
                     this.debounce('inputDebounce', function () {
                         self.inputUpdated();
-                    }, 800);
+                    }, 300);
                 }
 
             },
@@ -733,6 +753,9 @@ Example:
                                 setIfDefined(control, child, 'description');
                                 setIfDefined(control, child, 'map');
                                 setIfDefined(control, child, 'value');
+                                break;
+                            case 'fixed':
+                                this.handleControlUpdated({ detail: { map: control.map, value: control.value } });
                                 break;
                             default:
 
@@ -839,7 +862,7 @@ Example:
                                     if (typeof input !== 'undefined') {
                                         
                                         var obj = JSON.parse(input);
-                                        console.dir(obj);
+                                        
                                         self.updateControls(obj);
                                         self.inputInitialized = true;
                                     }

@@ -26,6 +26,9 @@ Example:
             paper-input, paper-textarea{
                 padding: 0 8px;
             }
+            paper-tooltip {
+                margin-left: 30px;
+            }
         </style>
         <template is="dom-if" if="{{multiline}}">
             <paper-textarea label="{{label}}" value="{{value}}" on-change="valueChanged" always-float-label></paper-textarea>

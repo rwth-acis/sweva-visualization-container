@@ -9,6 +9,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="sweva-visualization-container-panel.html">
+<link rel="import" href="sweva-error-console.html">
 <!--
 An element providing a solution to no problem in particular.
 
@@ -38,32 +39,43 @@ Example:
 
         <style>
             :host {
+                height: 100%;
+                min-height: 300px;                
+                position: relative;
+                font-family: 'Roboto', 'Noto', sans-serif;
+                position: relative;
+                display: block;
+            }
+
+            .container {
                 display: flex;
                 flex-direction: row;
                 box-sizing: border-box;
                 width: 100%;
-                height: 100%;
-                min-height: 300px;
-                border: 1px solid #808080;
-                position: relative;
-                font-family: 'Roboto', 'Noto', sans-serif;
+                height: calc(100% - 50px);
+                margin-bottom: 50px;
+                
             }
 
             #visualization-area {
                 flex: 1 1 0;
                 background: #ffffff;
-                overflow: overlay;
+                overflow: auto;
+                position: relative;
             }
         </style>
-        <div id="visualization-area">
+        <div class="container">
+            <div id="visualization-area">
+            </div>
+            <sweva-visualization-container-panel id="panel"
+                                                 on-inputchanged="handleInputChanged"
+                                                 on-roomchanged="handleRoomChanged"
+                                                 on-executed="handleExecuted"
+                                                 room="{{room}}">
+            </sweva-visualization-container-panel>
         </div>
-        <sweva-visualization-container-panel id="panel"
-                                             on-inputchanged="handleInputChanged"
-                                             on-roomchanged="handleRoomChanged"
-                                             on-executed="handleExecuted"
-                                             room="{{room}}">
-
-        </sweva-visualization-container-panel>
+        <sweva-error-console id="error-console">
+        </sweva-error-console>
     </template>
     <script src="http://localhost:5001/core.build.js"></script>
     <script>
@@ -81,7 +93,7 @@ Example:
                 },
                 input: {
                     type: Object,
-                    value: {}
+                    value: null
                 },
                 result: {
                     type: Object,
@@ -91,6 +103,10 @@ Example:
                     type: Object,
                     value: null
                 },
+                yjsServer: {
+                    type: String,
+                    value: 'http://localhost:1234'
+                },
                 yjs: {
                     type: Object,
                     value: null
@@ -99,17 +115,32 @@ Example:
                     type: Object,
                     value: {}
                 },
+                oldComposition: {
+                    type: String,
+                    value: ''
+                },
                 room: {
                     type: String,
                     value: 'defaultSwevaVisRoom1'
                 },
-                visualizationUrlPrefix:{
+                visualizationUrlPrefix: {
                     type: String,
                     value: ' '
                 },
-                visualizationUrlSuffix:{
+                visualizationUrlSuffix: {
                     type: String,
                     value: ' '
+                },
+                pollTimer: {
+                    type: Object,
+                    value: null
+                },
+                visualizationAreaSize: {
+                    type: Object,
+                    value: {
+                        width: 10,
+                        height: 10
+                    }
                 }
             },
 
@@ -132,11 +163,10 @@ Example:
 
             },
 
-           
             // Element Behavior
-            handleRoomChanged: function(event){
+            handleRoomChanged: function (event) {
                 this.room = event.detail;
-              
+
                 this.yjs.connector.options.room = this.room;
                 this.yjs = null;
                 console.log(this.room)
@@ -146,53 +176,98 @@ Example:
                 var self = this;
                 this.input = event.detail;
                 
-                var panel = this.$.panel;
-                panel.resetProgress();
-
+                this.execute();
                
-
-                this.executionManager.execute(
-                    {},
-                    this.input
-                    )
-                    .then(function (result) {
-                        self.result = result;
-                        
-                        self.updateVisualization();
-                       
-
-                    });
             },
             handleInputChanged: function (event) {
                 var input = event.detail;
                 this.input = input;
+
+            },
+            execute: function () {
+                var self = this;
+                var input = this.input || {};
+               
+                var panel = this.$.panel;
+                panel.resetProgress();
                 
+                this.executionManager.execute(
+                    {},
+                    input
+                    )
+                    .then(function (result) {
+                        self.result = result;
+                        self.updateVisualization();
+                    });
             },
             load: function (composition) {
-
-                if(typeof composition === 'object'){
-                    this.composition = composition;
+                var errorConsole = this.$$('#error-console');
+                if (errorConsole) {
+                    errorConsole.clear();
                 }
 
-                this.executionManager.setup(this.composition);
-                if (this.composition.controls) {
-                    this.$.panel.sections = this.composition.controls;
+
+                var sameTool = true;
+                var sameComposition = true;
+                var sameControls = true;
+
+                
+                if (typeof composition === 'object') {
+                    var jsonString= JSON.stringify(composition)
+                    if (jsonString != this.oldComposition) {
+
+                        this.oldComposition = jsonString;
+                        
+                        this.composition = composition;
+                        sameComposition = false;
+                    }
+                   
                 }
-                else {
-                    this.$.panel.sections = this.controls;
-                }
-                if (this.composition.visualization) {
-                    this.toolUrl = this.composition.visualization;
+                if (!sameComposition) {
+                    this.executionManager.setup(this.composition);
+                
+                    if (this.composition.controls) {
+                        this.$.panel.sections = this.composition.controls;
+                    }
+                    else {
+                        this.$.panel.sections = this.controls;
+                    }
+                    if (this.composition.visualization) {
+                        if (this.toolUrl != this.composition.visualization) {
+                            this.toolUrl = this.composition.visualization;
+                            sameTool = false;
+                        }
+
+                    }
+                    
+                    var self = this;
+                    if (!sameTool) {
+                        var url = this.toolUrl;
+                        this.loadVisualizationTool(this.toolUrl)
+                        .then(function () {
+
+                            console.log(url + ' loaded!');
+                            self.execute();
+                        });
+                    }
+                    else {
+                        this.execute();
+                    }
+
+                
                 }
 
-                this.loadVisualizationTool(this.toolUrl)
-                .then(function () {
-                    console.log('all loaded');
-                })
+                
             },
-            updateVisualization: function(){
-                var visualization = this.querySelector('#visualization-tool');
-                visualization.set(this.result);
+            updateVisualization: function () {
+              
+                var visualization = this.$$('#visualization-tool');
+                if (visualization) {
+                    visualization.set(this.result);
+                }
+
+
+
             },
             loadVisualizationTool: function (url) {
                 var self = this;
@@ -200,7 +275,14 @@ Example:
                     if (typeof url === 'undefined' || url === null) {
                         reject();
                     }
-                    var area = self.querySelector('#visualization-area');
+                    var area = self.$$('#visualization-area');
+
+                    var tool = self.$$('#visualization-tool');
+
+                    if (tool && typeof tool.cleanUp === 'function') {
+                        tool.cleanUp();
+                    }
+                    //console.log(area.offsetWidth, area.offsetHeight)
                     var children = Polymer.dom(area).children;
                     for (var i = 0; i < children.length; i++) {
                         Polymer.dom(area).removeChild(children[i]);
@@ -212,16 +294,27 @@ Example:
                     }
                     self.importHref(url, function (e) {
                         // e.target.import is the import document.
-                        var newElement = document.createElement('sweva-visualization-line-graph');
-                        //newElement.myProperty = 'foo';
-                        newElement.id = 'visualization-tool';
 
+                        var match = new RegExp(/\/[\w-]+\.html/).exec(url);
 
+                        if (match && match[0].length > 6) {
 
-                        Polymer.dom(area).appendChild(newElement);
-                       
-                        Polymer.dom.flush();
-                        resolve();
+                            var toolName = match[0].substring(1, match[0].length - 5);
+
+                            var newElement = document.createElement(toolName);
+                            //newElement.myProperty = 'foo';
+                            newElement.id = 'visualization-tool';
+
+                            Polymer.dom(area).appendChild(newElement);
+
+                            Polymer.dom.flush();
+                            newElement.resize(area.offsetWidth, area.offsetHeight);
+                            resolve();
+                        }
+                        else {
+                            reject();
+                        }
+
                     },
                     function (e) {
                         reject(e);
@@ -230,28 +323,48 @@ Example:
             },
             init: function () {
                 var self = this;
+
+                if (this.pollTimer) {
+                    clearInterval(this.pollTimer);
+                }
+
+                this.pollTimer = setInterval(function () {
+                    var area = self.$$('#visualization-area');
+                    if (area.offsetWidth != self.visualizationAreaSize.width || area.offsetHeight != self.visualizationAreaSize.height) {
+                        self.visualizationAreaSize.width = area.offsetWidth;
+                        self.visualizationAreaSize.height = area.offsetHeight;
+                        var visualization = self.$$('#visualization-tool');
+                        if (visualization && visualization.resize) {
+                            self.debounce('resizeDebouncer', function () {
+                                visualization.resize(area.offsetWidth, area.offsetHeight);
+                            }, 400);
+
+                        }
+
+                    }
+
+                }, 100);
                 Y({
                     db: {
                         name: 'memory'
                     },
                     connector: {
                         name: 'websockets-client',
-                        room: self.room//'swevavisualtest1'
+                        room: self.room,//'swevavisualtest1'
                         // debug: true,
-                        // url: 'http://127.0.0.1:2345'
+                        url: self.yjsServer
                     },
                     sourceDir: /*'../../bower_components/',//*/'http://127.0.0.1:8021/yjs/bower_components',
                     share: {
-                       
+
                         chat: 'Array',
                         input: 'Map',
                         inputUpdates: 'Array'
-                       
+
                     }
                 }).then(function (y) {
                     self.yjs = y;
-                   
-                   
+
                     var panel = self.$.panel;
 
                     panel.init(y);
