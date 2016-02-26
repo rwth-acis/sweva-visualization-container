@@ -668,9 +668,15 @@ Example:
 
             },
             createSections: function (sections) {
-                function setIfDefined(element, target, property) {
+                function setIfDefined(element, target, property, num) {
                     if (typeof element[property] !== 'undefined') {
-                        target[property] = element[property];
+                        if (typeof num === 'undefined' || !num) {
+                            target[property] = element[property];
+                        }
+                        else {
+                            target[property] = +element[property];
+                        }
+                        
                     }
                 }
                 var container = this.$.sections;
@@ -696,11 +702,11 @@ Example:
 
                                 setIfDefined(control, child, 'label');
                                 setIfDefined(control, child, 'map');
-                                setIfDefined(control, child, 'value');
+                                setIfDefined(control, child, 'value', true);
                                 setIfDefined(control, child, 'description');
-                                setIfDefined(control, child, 'min');
-                                setIfDefined(control, child, 'max');
-                                setIfDefined(control, child, 'step');
+                                setIfDefined(control, child, 'min', true);
+                                setIfDefined(control, child, 'max', true);
+                                setIfDefined(control, child, 'step', true);
 
                                 break;
                             case 'toggle':
@@ -717,11 +723,11 @@ Example:
                                 child.addEventListener('controlupdated', this.handleControlUpdated.bind(this), false);
                                 setIfDefined(control, child, 'label');
                                 setIfDefined(control, child, 'map');
-                                setIfDefined(control, child, 'value');
+                                setIfDefined(control, child, 'value', true);
                                 setIfDefined(control, child, 'description');
-                                setIfDefined(control, child, 'min');
-                                setIfDefined(control, child, 'max');
-                                setIfDefined(control, child, 'step');
+                                setIfDefined(control, child, 'min', true);
+                                setIfDefined(control, child, 'max', true);
+                                setIfDefined(control, child, 'step', true);
 
                                 break;
                             case 'text':
