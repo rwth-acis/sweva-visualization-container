@@ -32,7 +32,7 @@ Example:
 <script src="../y-map/y-map.js"></script>
 <script src="../y-array/y-array.js"></script>
 <script src="../y-text/y-text.js"></script>
-
+<script src="../SWeVA-Core/app/core.build.js"></script>
 <script src="y-websockets-client.js"></script>
 <dom-module id="sweva-visualization-container">
     <template>
@@ -77,7 +77,7 @@ Example:
         <sweva-error-console id="error-console">
         </sweva-error-console>
     </template>
-    <script src="http://localhost:5001/core.build.js"></script>
+    
     <script>
         Polymer({
             is: 'sweva-visualization-container',
@@ -105,7 +105,7 @@ Example:
                 },
                 yjsServer: {
                     type: String,
-                    value: 'http://localhost:1234'
+                    value: 'http://137.226.232.217:1234'
                 },
                 yjs: {
                     type: Object,
@@ -141,7 +141,16 @@ Example:
                         width: 10,
                         height: 10
                     }
-                }
+                },
+                staticInput: {
+                    type: Boolean,
+                    value: false
+                },
+                overrideInput: {
+                    type: Object,
+                    value: null
+                }               
+
             },
 
             // Element Lifecycle
@@ -187,6 +196,10 @@ Example:
             execute: function () {
                 var self = this;
                 var input = this.input || {};
+
+                if (this.overrideInput != null) {
+                    input = this.overrideInput;
+                }
                
                 var panel = this.$.panel;
                 panel.resetProgress();
@@ -344,33 +357,48 @@ Example:
                     }
 
                 }, 100);
-                Y({
-                    db: {
-                        name: 'memory'
-                    },
-                    connector: {
-                        name: 'websockets-client',
-                        room: self.room,//'swevavisualtest1'
-                        // debug: true,
-                        url: self.yjsServer
-                    },
-                    sourceDir: /*'../../bower_components/',//*/'http://127.0.0.1:8021/yjs/bower_components',
-                    share: {
 
-                        chat: 'Array',
-                        input: 'Map',
-                        inputUpdates: 'Array'
+                if (!this.staticInput) {
 
-                    }
-                }).then(function (y) {
-                    self.yjs = y;
 
+                    Y({
+                        db: {
+                            name: 'memory'
+                        },
+                        connector: {
+                            name: 'websockets-client',
+                            room: self.room,//'swevavisualtest1'
+                            // debug: true,
+                            url: self.yjsServer
+                        },
+                        sourceDir: /*'../../bower_components/',//*/'http://127.0.0.1:8021/yjs/bower_components',
+                        share: {
+
+                            chat: 'Array',
+                            input: 'Map',
+                            inputUpdates: 'Array'
+
+                        }
+                    }).then(function (y) {
+                        self.yjs = y;
+
+                        var panel = self.$.panel;
+
+                        panel.init(y);
+
+                        self.fire('initialized');
+                    });
+                }
+                else {
                     var panel = self.$.panel;
-
-                    panel.init(y);
-
+                    panel.style.display = 'none';
+                    var errorConsole = self.$$('#error-console');
+                    errorConsole.style.display = 'none';
+                    var container = self.$$('.container');
+                    container.style.height = '100%';
+                    container.style.marginBottom = '0';
                     self.fire('initialized');
-                });
+                }
             }
 
         });
