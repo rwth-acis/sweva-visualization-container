@@ -1,6 +1,6 @@
-# seed-element
+# sweva-visualization-container
 
-An element providing a starting point for your own reusable Polymer elements.
+The Collaborative Visualization Tool for the SWeVA platform.
 
 
 ## Dependencies
