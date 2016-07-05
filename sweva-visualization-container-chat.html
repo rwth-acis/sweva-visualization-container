@@ -148,16 +148,15 @@ Example:
             init: function (yjs) {
                 var self = this;
                 this.yjs = yjs;
-                yjs.share.chat.observe(function (events) {
-                    for (var i = 0; i < events.length; i++) {
+                yjs.share.chat.observe(function (event) {
 
-                        if (events[i].type === 'insert') {
-                            self.appendMessage(events[i].object._content[events[i].index].val, events[i].index);
-                        } else if (events[i].type === 'delete') {
-                            self.removeMessage(events[i].index);
+                    if (event.type === 'insert') {
+                        self.appendMessage(event.object._content[event.index].val, event.index);
+                    } else if (event.type === 'delete') {
+                        self.removeMessage(event.index);
 
-                        }
                     }
+
                     // concurrent insertions may result in a history > 7, so cleanup here
                     self.cleanupChat()
                 });

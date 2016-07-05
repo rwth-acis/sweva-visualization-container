@@ -839,42 +839,38 @@ Example:
                 this.yjs = yjs;
                 this.inputInitialized = false;
                 var self = this;
-                yjs.share.inputUpdates.observe(function (events) {
+                yjs.share.inputUpdates.observe(function (event) {
                    
                     if (self.inputInitialized && self.connected) {
 
-                        for (var i = 0; i < events.length; i++) {
+                        if (event.type === 'insert') {
 
-                            if (events[i].type === 'insert') {
-
-                                self.appendInputUpdate(events[i].value);
-                            }
+                            self.appendInputUpdate(event.value);
                         }
+
                     }
                     // concurrent insertions may result in a history > 7, so cleanup here
                     self.cleanupInputUpdates();
                 });
 
-                yjs.share.input.observe(function (events) {
+                yjs.share.input.observe(function (event) {
                     
                     if (self.connected) {
 
-                        for (var i = 0; i < events.length; i++) {
+                        if (event.type !== 'delete') {
 
-                            if (events[i].type !== 'delete') {
-                                
-                                if (!self.inputInitialized) {
-                                    var input = yjs.share.input.get('json')
-                                    if (typeof input !== 'undefined') {
-                                        
-                                        var obj = JSON.parse(input);
-                                        
-                                        self.updateControls(obj);
-                                        self.inputInitialized = true;
-                                    }
+                            if (!self.inputInitialized) {
+                                var input = yjs.share.input.get('json')
+                                if (typeof input !== 'undefined') {
+
+                                    var obj = JSON.parse(input);
+
+                                    self.updateControls(obj);
+                                    self.inputInitialized = true;
                                 }
                             }
                         }
+
                     }
 
                 });
