@@ -308,11 +308,16 @@ Example:
                     self.importHref(url, function (e) {
                         // e.target.import is the import document.
 
-                        var match = new RegExp(/\/[\w-]+\.html/).exec(url);
+                        var match = new RegExp(/\/[\w-]+\.(min.html|html)/).exec(url);
 
                         if (match && match[0].length > 6) {
 
                             var toolName = match[0].substring(1, match[0].length - 5);
+
+                            // remove the ".min" from minified files
+                            if (toolName.indexOf('.min') > -1) {
+                                toolName = toolName.substring(0, toolName.length - 4);
+                            }
 
                             var newElement = document.createElement(toolName);
                             //newElement.myProperty = 'foo';
