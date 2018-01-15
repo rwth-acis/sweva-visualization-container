@@ -39,56 +39,64 @@ Example:
         <paper-tooltip>{{description}}</paper-tooltip>
     </template>
     <script>
-        Polymer({
-            is: 'sweva-visualization-input-text',
+      class SwevaVisualizationInputText extends Polymer.Element {
 
+        static get is() {
+          return 'sweva-visualization-input-text';
+        }
+
+        static get properties() {
+          return {
+              /* properties meta data object just like 1.x */
             properties: {
-                label: {
-                    type: String,
-                    value: 'Title'
-                },
-                multiline: {
-                    type: Boolean,
-                    value: false
-                },
-                description:{
-                    type: String,
-                    value: 'No description available.'
-                },
-                map: {
-                    type: String,
-                    value: ''
-                },
-                value: {
-                    type: String,
-                    value: '',
-                    notify: true,
-                    //observer: 'valueChanged'
-                }
-            },
-
-            // Element Lifecycle
-
-            ready: function () {
-
-            },
-
-            attached: function () {
-                this.valueChanged();
-            },
-
-            detached: function () {
-
-            },
-
-            // Element Behavior
-            valueChanged: function () {
-                var self = this;
-                this.debounce('text-input', function () {
-                    self.fire('controlupdated', { map: self.map, value: self.value });
-                }, 300);               
+              label: {
+                type: String,
+                value: 'Title'
+              },
+              multiline: {
+                type: Boolean,
+                value: false
+              },
+              description: {
+                type: String,
+                value: 'No description available.'
+              },
+              map: {
+                type: String,
+                value: ''
+              },
+              value: {
+                type: String,
+                value: '',
+                notify: true,
+                //observer: 'valueChanged'
+              }
             }
+          }
+        }
 
-        });
+        ready() {
+          super.ready();
+        }
+
+        connectedCallback() {
+
+          Polymer.RenderStatus.beforeNextRender(this, function() {
+            this.valueChanged();
+          });
+        }
+
+        // Element Behavior
+        valueChanged() {
+        var self = this;
+        this._debouncer = Polymer.Debouncer.debounce(this._debouncer, Polymer.Async.timeOut.after(300),
+              () => {
+            self.dispatchEvent(new CustomEvent('controlupdated', { bubbles: true, composed: true , detail: { map: self.map, value: self.value } }));
+          });
+      }
+      }
+
+      // Register custom element definition using standard platform API
+      window.customElements.define(SwevaVisualizationInputText.is, SwevaVisualizationInputText);
     </script>
 </dom-module>

@@ -36,49 +36,56 @@ Example:
         <paper-tooltip>{{description}}</paper-tooltip>
     </template>
     <script>
-        Polymer({
-            is: 'sweva-visualization-input-toggle',
+      class SwevaVisualizationInputToggle extends Polymer.Element {
 
+        static get is() {
+          return 'sweva-visualization-input-toggle';
+        }
+
+        static get properties() {
+          return {
+              /* properties meta data object just like 1.x */
             properties: {
-                label: {
-                    type: String,
-                    value: 'Title'
-                },
-                description: {
-                    type: String,
-                    value: 'No description available.'
-                },
-                map: {
-                    type: String,
-                    value: ''
-                },
-                value: {
-                    type: Boolean,
-                    value: false,
-                    notify: true,
-                    //observer: 'valueChanged'
-                }
-            },
-
-            // Element Lifecycle
-
-            ready: function () {
-
-            },
-
-            attached: function () {
-                this.valueChanged();
-            },
-
-            detached: function () {
-
-            },
-
-            // Element Behavior
-            valueChanged: function () {                
-                this.fire('controlupdated', { map: this.map, value: this.value });
+              label: {
+                type: String,
+                value: 'Title'
+              },
+              description: {
+                type: String,
+                value: 'No description available.'
+              },
+              map: {
+                type: String,
+                value: ''
+              },
+              value: {
+                type: Boolean,
+                value: false,
+                notify: true,
+                //observer: 'valueChanged'
+              }
             }
+          }
+        }
 
-        });
+        ready() {
+          super.ready();
+        }
+
+        connectedCallback() {
+          Polymer.RenderStatus.beforeNextRender(this, function() {
+            this.valueChanged();
+          });
+        }
+
+        // Element Behavior
+        valueChanged() {
+          this.dispatchEvent(new CustomEvent('controlupdated', { bubbles: true, composed: true , detail: { map: this.map, value: this.value } }));
+        }
+      }
+
+      // Register custom element definition using standard platform API
+      window.customElements.define(SwevaVisualizationInputToggle.is, SwevaVisualizationInputToggle);
+
     </script>
 </dom-module>

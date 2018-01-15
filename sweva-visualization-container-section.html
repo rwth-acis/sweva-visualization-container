@@ -69,62 +69,66 @@ Example:
             </div>
         </div>
         <div class$="content {{collapsedStyle}}">
-            <content>
-            </content>
+            <slot>
+            </slot>
         </div>
     </template>
     <script>
-        Polymer({
-            is: 'sweva-visualization-container-section',
+        //TODO: Check the slot generation
 
-            properties: {
+        class SwevaVisualizationContainerSection extends Polymer.Element {
+
+          static get is() {
+            return 'sweva-visualization-container-section';
+          }
+
+          static get properties() {
+            return {
+                /* properties meta data object just like 1.x */
+              properties: {
                 label: {
-                    type: String,
-                    value: 'Title'
+                  type: String,
+                  value: 'Title'
                 },
                 collapsed: {
-                    type: Boolean,
-                    value: false,
-                    observer: 'collapse'
+                  type: Boolean,
+                  value: false,
+                  observer: 'collapse'
                 },
                 collapsedStyle: {
-                    type: String,
-                    value: ''
+                  type: String,
+                  value: ''
                 }
-            },
-
-            // Element Lifecycle
-
-            ready: function () {
-                
-            },
-
-            attached: function () {
-                var header = this.$$('#header');
-
-                header.addEventListener("click", this.handleHeaderClicked.bind(this), false);
-            },
-
-            detached: function () {
-
-            },
-
-            // Element Behavior
-            collapse: function (collapsed) {
-                if (collapsed) {
-
-                    this.collapsedStyle = 'hidden';
-                }
-                else {
-
-                    this.collapsedStyle = '';
-                }
-            },
-            handleHeaderClicked: function () {
-                
-                this.collapsed = !this.collapsed;
+              }
             }
+          }
 
-        });
+          ready() {
+            super.ready();
+          }
+
+          attached() { //TOOD fix the attached to connectedCallback
+            Polymer.RenderStatus.afterNextRender(this, function() {
+              var header = this.shadowRoot.querySelector('#header');  //TODO fix called more than one more time
+              header.addEventListener("click", this.handleHeaderClicked.bind(this), false);
+            });
+          }
+
+          // Element Behavior
+          collapse(collapsed) {
+              if (collapsed) {
+                this.collapsedStyle = 'hidden';
+              }
+              else {
+                this.collapsedStyle = '';
+              }
+          }
+          handleHeaderClicked() {
+            this.collapsed = !this.collapsed;
+          }
+        }
+
+        // Register custom element definition using standard platform API
+        window.customElements.define(SwevaVisualizationContainerSection.is, SwevaVisualizationContainerSection);
     </script>
 </dom-module>

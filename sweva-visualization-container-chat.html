@@ -97,156 +97,155 @@ Example:
     </template>
 
     <script>
-        Polymer({
-            is: 'sweva-visualization-container-chat',
 
-            properties: {
-                messages: {
+      class SwevaVisualizationContainerChat extends Polymer.Element {
+            static get is() {
+              return 'sweva-visualization-container-chat';
+            }
+
+            static get properties() {
+              return {
+                  /* properties meta data object just like 1.x */
+                properties: {
+                  messages: {
                     type: Array,
                     value: []
 
-                },
-                currentMessage: {
+                  },
+                  currentMessage: {
                     type: String,
                     value: ''
-                },
-                maxMessages: {
+                  },
+                  maxMessages: {
                     type: Number,
                     value: 5
-                },
-                user: {
+                  },
+                  user: {
                     type: Object,
                     value: {
-                        name: 'Anonymous',
-                        color: '#000'
+                      name: 'Anonymous',
+                      color: '#000'
                     }
-                },
-                yjs: {
+                  },
+                  yjs: {
                     type: Object,
                     value: null
-                },
-                observers: [
-                    //'_messagesChanged(messages.splices)'
-                ],
+                  }
+                }
+              }
+            }
 
-            },
+            ready() {
+              super.ready();
+            }
 
-            // Element Lifecycle
-
-            ready: function () {
-
-            },
-
-            attached: function () {
+            connectedCallback() {
+              Polymer.RenderStatus.beforeNextRender(this, function() {
                 this._messagesChanged();
-            },
+              });
+            }
 
-            detached: function () {
-
-            },
-
-            init: function (yjs) {
+            init(yjs) {
                 var self = this;
                 this.yjs = yjs;
                 yjs.share.chat.observe(function (event) {
 
-                    if (event.type === 'insert') {
-                        self.appendMessage(event.object._content[event.index].val, event.index);
-                    } else if (event.type === 'delete') {
-                        self.removeMessage(event.index);
+                  if (event.type === 'insert') {
+                    self.appendMessage(event.object._content[event.index].val, event.index);
+                  } else if (event.type === 'delete') {
+                    self.removeMessage(event.index);
+                  }
 
-                    }
-
-                    // concurrent insertions may result in a history > 7, so cleanup here
-                    self.cleanupChat()
+                  // concurrent insertions may result in a history > 7, so cleanup here
+                  self.cleanupChat()
                 });
-            },
-            appendMessage: function (message, position) {
-                var messages = this.messages.slice(0);
+            }
 
+            appendMessage(message, position) {
+                var messages = this.messages.slice(0);
                 messages.splice(position, 0, message);
                 this.messages = messages;
                 this._messagesChanged();
-                this.fire('newmessage', message);
+                this.dispatchEvent(new CustomEvent('newmessage', { bubbles: true, composed: true , detail: message }));
+            }
 
-            },
-            removeMessage: function (position) {
+            removeMessage(position) {
                 var messages = this.messages.slice(0);
                 messages.splice(position, 1);
                 this.messages = messages;
-            },
-            cleanupChat: function () {
+            }
+
+            cleanupChat() {
                 var len;
                 while ((len = this.yjs.share.chat.length) > 50) {
-                    this.yjs.share.chat.delete(0)
+                  this.yjs.share.chat.delete(0)
                 }
-            },
+            }
 
-            _colorToStyle: function (color) {
-
+            _colorToStyle(color) {
                 return 'color:' + color + ';';
-            },
-            _timestampToTime: function (timestamp) {
+            }
+
+            _timestampToTime(timestamp) {
                 var d = new Date(+timestamp);
                 return d.toLocaleTimeString();
-            },
-            _messagesChanged: function () {
+            }
 
-                Polymer.dom.flush()
+            _messagesChanged() {
 
+                Polymer.dom.flush();  // problem do not know yet how to convert to Polymer 2.0
                 //  this.scrollHeight = this.$$('.message-list').scrollHeight;
-
-                var container = this.$$('.message-list');
-
+                var container = this.shadowRoot.querySelector('.message-list');
                 container.scrollTop = 999999999;//this.scrollHeight
+            }
 
-            },
-            handleEnter: function (e) {
+            handleEnter(e) {
                 // check if 'enter' was pressed
-
                 if (e.keyCode === 13 && !e.ctrlKey && !e.shiftKey) {
-                    e.preventDefault();
-                    this.handleSendMessage();
+                  e.preventDefault();
+                  this.handleSendMessage();
                 }
-            },
-            addMessage: function (data) {
+            }
 
+            addMessage(data) {
                 var message = {};
-
                 message.name = data.name || this.user.name || 'Anonymous';
                 message.color = data.color || this.user.color || '#000';
                 message.timestamp = data.timestamp || Date.now();
                 message.message = data.message || 'no message';
 
-                if (this.yjs.share.chat.length >= 50) {                   
-                    this.yjs.share.chat.delete(0);
+                if (this.yjs.share.chat.length >= 50) {
+                  this.yjs.share.chat.delete(0);
                 }
 
                 this.yjs.share.chat.insert(this.yjs.share.chat.length, [message]);
+            }
 
-            },
-            handleSendMessage: function () {
-
+            handleSendMessage() {
                 var message = this.currentMessage;
                 if (message.trim().length > 0) {
-                    this.currentMessage = "";
-                    this.addMessage({ message: message });
+                  this.currentMessage = "";
+                  this.addMessage({ message: message });
                 }
-            },
-            updateUser: function (user) {
+            }
+
+            updateUser (user) {
                 if (user.name) {
-                    this.user.name = user.name;
+                  this.user.name = user.name;
                 }
                 if (user.color) {
-                    this.user.color = user.color;
+                  this.user.color = user.color;
                 }
-            },
-            cleanUp: function () {
+            }
+
+            cleanUp () {
                 this.messages = [];
                 this.yjs = null;
                 this.users = [];
             }
+        }
 
-        });
+      // Register custom element definition using standard platform API
+      window.customElements.define(SwevaVisualizationContainerChat.is, SwevaVisualizationContainerChat);
     </script>
 </dom-module>
