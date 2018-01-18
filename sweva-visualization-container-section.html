@@ -107,9 +107,10 @@ Example:
             super.ready();
           }
 
-          attached() { //TOOD fix the attached to connectedCallback
+          connectedCallback() {
+            super.connectedCallback();//TOOD fix the attached to connectedCallback
             Polymer.RenderStatus.afterNextRender(this, function() {
-              var header = this.shadowRoot.querySelector('#header');  //TODO fix called more than one more time
+              var header = this.shadowRoot.querySelector('#header');
               header.addEventListener("click", this.handleHeaderClicked.bind(this), false);
             });
           }

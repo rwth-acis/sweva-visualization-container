@@ -13,8 +13,9 @@
 <link rel="import" href="../paper-tabs/paper-tabs.html">
 <link rel="import" href="../paper-tabs/paper-tab.html">
 <link rel="import" href="../iron-pages/iron-pages.html">
-<link rel="import" href="../paper-color-picker/paper-color-input.html">
+<link rel="import" href="../paper-swatch-picker/paper-swatch-picker.html">
 <link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../neon-animation/web-animations.html">
 
 <link rel="import" href="sweva-visualization-container-section.html">
 <link rel="import" href="sweva-visualization-container-chat.html">
@@ -280,8 +281,7 @@ Example:
                                                             value="{{username}}">
                             </sweva-visualization-input-text>
                             <div style="padding: 0 8px">
-                                <paper-color-input label="Color" value="{{usercolor}}">
-                                </paper-color-input>
+                                <paper-swatch-picker  color="{{usercolor}}">Color</paper-swatch-picker>
                             </div>
                             <paper-button on-click="handleUserUpdateClick">Update</paper-button>
                         </sweva-visualization-container-section>
@@ -312,6 +312,598 @@ Example:
         </div>
     </template>
     <script>
+//      class SwevaVisualizationContainerPanel extends Polymer.Element {
+//
+//        static get is() {
+//          return 'sweva-visualization-container-panel';
+//        }
+//
+//        static get properties() {
+//          return {
+//              /* properties meta data object just like 1.x */
+//            properties: {
+//              label: {
+//                type: String,
+//                value: 'Panel'
+//              },
+//              input: {
+//                type: Object,
+//                value: {}
+//              },
+//
+//              collapsed: {
+//                type: Boolean,
+//                value: true,
+//                observer: 'collapse'
+//              },
+//              collapsedStyle: {
+//                type: String,
+//                value: ''
+//              },
+//              room: {
+//                type: String,
+//                value: 'noroom'
+//              },
+//              connected: {
+//                type: Boolean,
+//                value: true
+//              },
+//              collaborative: {
+//                type: Boolean,
+//                value: true
+//              },
+//              selectedTab: {
+//                type: Number,
+//                value: 0
+//              },
+//              presets: {
+//                type: Array,
+//                value: []
+//              },
+//              username: {
+//                type: String,
+//                value: 'User',
+//              },
+//              usercolor: {
+//                type: String,
+//                value: '#009688'
+//              },
+//              textToSpeech: {
+//                type: Boolean,
+//                value: false
+//              },
+//              sections: {
+//                type: Array,
+//                value: [],
+//                observer: 'sectionsChanged'
+//              },
+//              autoExecute: {
+//                type: Boolean,
+//                value: true
+//              },
+//              progress: {
+//                type: Number,
+//                value: 50
+//              },
+//              yjs: {
+//                type: Object,
+//                value: null
+//              },
+//              indicatorVisible: {
+//                type: String,
+//                value: ''
+//              },
+//              indicatorTitle: {
+//                type: String,
+//                value: ''
+//              },
+//              indicatorText: {
+//                type: String,
+//                value: ''
+//              },
+//              updateHistory: {
+//                type: Object,
+//                value: {}
+//              }
+//            }
+//          }
+//        }
+//
+//        ready() {
+//          super.ready();
+//        }
+//
+//        connectedCallback() {
+//          super.connectedCallback();
+//          Polymer.RenderStatus.beforeNextRender(this, function() {
+//            if (typeof localStorage['enableTTS'] !== 'undefined' && localStorage['enableTTS'] != null) {
+//
+//              this.textToSpeech = localStorage['enableTTS'] == 'true';
+//              this.$.toggleTTS.value = this.textToSpeech;
+//
+//            }
+//            else {
+//              localStorage['enableTTS'] = this.textToSpeech;
+//            }
+//
+//            if (typeof localStorage['userName'] !== 'undefined' && localStorage['userName'] != null) {
+//              this.username = localStorage['userName'];
+//            }
+//            else {
+//              localStorage['userName'] = this.username;
+//            }
+//
+//            if (typeof localStorage['userColor'] !== 'undefined' && localStorage['userColor'] != null) {
+//              this.setUserColor(localStorage['userColor']);
+//            }
+//            else {
+//              localStorage['userColor'] = this.usercolor;
+//            }
+//
+//            if (typeof localStorage['autoExecute'] !== 'undefined' && localStorage['autoExecute'] != null) {
+//              this.autoExecute = localStorage['autoExecute'] == 'true';
+//              this.$.toggleAutoExecute.value = this.autoExecute;
+//            }
+//            else {
+//              localStorage['autoExecute'] = this.autoExecute;
+//            }
+//
+//            if (typeof localStorage['connected'] !== 'undefined' && localStorage['connected'] != null) {
+//              this.connected = localStorage['connected'] == 'true';
+//              this.$.toggleConnected.value = this.connected;
+//            }
+//            else {
+//              localStorage['connected'] = this.connected;
+//            }
+//
+//            if (typeof localStorage['room'] !== 'undefined' && localStorage['room'] != null) {
+//              //this.room = localStorage['room'];
+//            }
+//            else {
+//              localStorage['room'] = this.room;
+//            }
+//            this.handleUserUpdateClick();
+//          });
+//        }
+//
+//        // Element Behavior
+//        sectionsChanged() {
+//            this.createSections(this.sections);
+//        }
+//
+//        say(text) {
+//            if (typeof window.speechSynthesis === 'undefined') {
+//              return;
+//            }
+//            window.speechSynthesis.cancel();
+//            var msg = new SpeechSynthesisUtterance(text.substring(0, 100));
+//            msg.lang = 'en-US';
+//            window.speechSynthesis.speak(msg);
+//        }
+//
+//        setUserColor(hex) {
+//            this.shadowRoot.querySelector('paper-swatch-picker').value = hex;
+//            this.shadowRoot.querySelector('paper-swatch-picker').ready();
+//        }
+//
+//        handleUserUpdateClick() {
+//            var color = this.userColor;
+//            localStorage['userName'] = this.username;
+//            localStorage['userColor'] = color;
+//
+//            var chat = this.shadowRoot.querySelector('sweva-visualization-container-chat');
+//            if (chat) {
+//              chat.updateUser({ name: this.username, color: color });
+//            }
+//        }
+//
+//        handleNewChatMessage(event) {
+//            var name = event.detail.name;
+//            var message = event.detail.message;
+//            var timestamp = event.detail.timestamp;
+//            if (timestamp + 10000 > Date.now()) {
+//
+//              if (this.textToSpeech && (this.selectedTab != 1 || this.collapsed)) {//not in chat window
+//                this.showindicator(name, message);
+//                this.say(name + ' ' + message);
+//              }
+//
+//            }
+//            //this.say(message);
+//        }
+//
+//        showindicator(title, text) {
+//            this.indicatorVisible = 'opaque';
+//            this.indicatorTitle = title;
+//            this.indicatorText = text;
+//            if (this.indicatorTimer) {
+//              clearTimeout(this.indicatorTimer);
+//            }
+//            var self = this;
+//            this.indicatorTimer = setTimeout(function () {
+//              self.indicatorVisible = '';
+//            }, 2000);
+//        }
+//
+//        handleControlUpdated(event) {
+//            var map = event.detail.map;
+//            var value = event.detail.value;
+//
+//            if (this.updateHistory.hasOwnProperty(map)) {
+//              if (this.updateHistory[map] != value) {
+//                this.updateHistory[map] = value;
+//
+//                this.inputUpdate(map, value);
+//              }
+//            }
+//            else {
+//              this.updateHistory[map] = value;
+//              this.inputUpdate(map, value, true);
+//            }
+//        }
+//
+//        handleTTSToggle(event) {
+//            this.textToSpeech = event.target.checked;
+//            localStorage['enableTTS'] = this.textToSpeech;
+//        }
+//
+//        handleAutoExecuteToggle(event) {
+//            this.autoExecute = event.target.checked;
+//            localStorage['autoExecute'] = this.autoExecute;
+//        }
+//
+//        handleRoomConnectedToggle(event) {
+//            this.connected = event.target.checked;
+//            localStorage['connected'] = this.connected;
+//            if (this.connected && this.yjs) {
+//              this.inputInitialized = false;
+//              var input = this.yjs.share.input.get('json');
+//              if (typeof input !== 'undefined') {
+//                var obj = JSON.parse(input);
+//                this.updateControls(obj);
+//                this.inputInitialized = true;
+//              }
+//            }
+//        }
+//
+//        handleSwitchRoom() {
+//            localStorage['room'] = this.room;
+//            this.dispatchEvent(new CustomEvent('roomchanged', { bubbles: true, composed: true , detail: this.room }));
+//        }
+//
+//        inputUpdated() {
+//            if (this.yjs && this.connected && this.inputInitialized) {
+//              var inputJSON = JSON.stringify(this.input);
+//              // if (this.yjs.share.input.get('json)') != inputJSON) {
+//
+//
+//              this.yjs.share.input.set('json', inputJSON);
+//              // }
+//            }
+//
+//            if (this.autoExecute) {
+//              this.handleExecute();
+//            }
+//            //console.log(JSON.stringify(this.input, null, 2));
+//            this.dispatchEvent(new CustomEvent('inputchanged', { bubbles: true, composed: true , detail: this.input}));
+//        }
+//
+//        inputUpdate(maps, value, fromYjs) {
+//            if (typeof maps !== 'object' || !Array.isArray(maps)) {
+//              return;
+//            }
+//            if (typeof value === 'undefined') {
+//              return;
+//            }
+//            for (var i = 0; i < maps.length; i++) {
+//
+//              var map = maps[i];
+//
+//              if (typeof map !== 'string') {
+//                continue;
+//              }
+//
+//              var mapParts = map.split('.');
+//              var target = null;
+//              if (mapParts[0] == 'input') {
+//                target = this.input;
+//              }
+//
+//              if (target === null) {
+//                continue;
+//              }
+//
+//              for (var k = 1; k < mapParts.length - 1; k++) {
+//                var part = mapParts[k];
+//
+//                if (!target.hasOwnProperty(part)) {
+//                  target[part] = {};
+//                }
+//
+//                target = target[part];
+//              }
+//
+//              if (mapParts.length - 1 > 0) {
+//                target[mapParts[mapParts.length - 1]] = value;
+//              }
+//              else {
+//                target = value;
+//              }
+//              target = value;
+//
+//              var self = this;
+//
+//              if (typeof fromYjs === 'undefined' || !fromYjs) {
+//
+//                if (this.yjs && this.connected) {
+//
+//                  if (this.yjs.share.inputUpdates.length >= 10) {
+//
+//                    this.yjs.share.inputUpdates.delete(0);
+//                  }
+//
+//                  this.yjs.share.inputUpdates.insert(this.yjs.share.inputUpdates.length, [{ map: map, value: value }]);
+//                }
+//              }
+//
+//              this._debouncer = Polymer.Debouncer.debounce(this._debouncer, Polymer.Async.timeOut.after(300),
+//                  () => {
+//                  self.inputUpdated();
+//              });
+//            }
+//        }
+//
+//        createSections: function (sections) {
+//        function setIfDefined(element, target, property, num) {
+//          if (typeof element[property] !== 'undefined') {
+//            if (typeof num === 'undefined' || !num) {
+//              target[property] = element[property];
+//            }
+//            else {
+//              target[property] = +element[property];
+//            }
+//
+//          }
+//        }
+//        var container = this.$.sections;
+//
+//        // clean
+//        var children = Polymer.dom(container).children; //T
+//        for (var i = 0; i < children.length; i++) {
+//          Polymer.dom(container).removeChild(children[i]);
+//        }
+//        for (var i = 0; i < sections.length; i++) {
+//          var node = document.createElement('sweva-visualization-container-section');
+//          node.label = sections[i].label || ('Section ' + i);
+//          Polymer.dom(container).appendChild(node);
+//
+//          for (var k = 0; k < sections[i].controls.length; k++) {
+//            var control = sections[i].controls[k];
+//
+//            var child = null;
+//            switch (control.type.trim().toLowerCase()) {
+//              case 'slider':
+//                child = document.createElement('sweva-visualization-input-slider');
+//                child.addEventListener('controlupdated', this.handleControlUpdated.bind(this), false);
+//
+//                setIfDefined(control, child, 'label');
+//                setIfDefined(control, child, 'map');
+//                setIfDefined(control, child, 'value', true);
+//                setIfDefined(control, child, 'description');
+//                setIfDefined(control, child, 'min', true);
+//                setIfDefined(control, child, 'max', true);
+//                setIfDefined(control, child, 'step', true);
+//
+//                break;
+//              case 'toggle':
+//                child = document.createElement('sweva-visualization-input-toggle');
+//                child.addEventListener('controlupdated', this.handleControlUpdated.bind(this), false);
+//                setIfDefined(control, child, 'label');
+//                setIfDefined(control, child, 'description');
+//                setIfDefined(control, child, 'map');
+//                setIfDefined(control, child, 'value');
+//
+//                break;
+//              case 'number':
+//                child = document.createElement('sweva-visualization-input-number');
+//                child.addEventListener('controlupdated', this.handleControlUpdated.bind(this), false);
+//                setIfDefined(control, child, 'label');
+//                setIfDefined(control, child, 'map');
+//                setIfDefined(control, child, 'value', true);
+//                setIfDefined(control, child, 'description');
+//                setIfDefined(control, child, 'min', true);
+//                setIfDefined(control, child, 'max', true);
+//                setIfDefined(control, child, 'step', true);
+//
+//                break;
+//              case 'text':
+//                child = document.createElement('sweva-visualization-input-text');
+//                child.addEventListener('controlupdated', this.handleControlUpdated.bind(this), false);
+//                child.multiline = false;
+//                setIfDefined(control, child, 'label');
+//                setIfDefined(control, child, 'description');
+//                setIfDefined(control, child, 'map');
+//                setIfDefined(control, child, 'value');
+//
+//                break;
+//              case 'dropdown':
+//                child = document.createElement('sweva-visualization-input-dropdown');
+//                child.addEventListener('controlupdated', this.handleControlUpdated.bind(this), false);
+//
+//                setIfDefined(control, child, 'label');
+//                setIfDefined(control, child, 'map');
+//                setIfDefined(control, child, 'description');
+//                setIfDefined(control, child, 'items');
+//                child.selectedIndex = 0;
+//
+//                break;
+//              case 'multiline':
+//                child = document.createElement('sweva-visualization-input-text');
+//                child.addEventListener('controlupdated', this.handleControlUpdated.bind(this), false);
+//                child.multiline = true;
+//                setIfDefined(control, child, 'label');
+//                setIfDefined(control, child, 'description');
+//                setIfDefined(control, child, 'map');
+//                setIfDefined(control, child, 'value');
+//                break;
+//              case 'fixed':
+//                this.handleControlUpdated({ detail: { map: control.map, value: control.value } });
+//                break;
+//              default:
+//
+//            }
+//
+//            if (child) {
+//              Polymer.dom(node).appendChild(child);
+//            }
+//          }
+//        }
+//        Polymer.dom.flush();
+//      },
+//        connectedText: function (connected) {
+//        return connected ? 'Synchronized' : 'Unsynchronized';
+//      },
+//
+//        collapse: function (collapsed) {
+//        if (collapsed) {
+//          this.style.width = '40px';
+//          this.collapsedStyle = 'hidden';
+//        }
+//        else {
+//          this.style.width = '';
+//          this.collapsedStyle = '';
+//        }
+//      },
+//        handleCollapse: function () {
+//        this.collapsed = !this.collapsed;
+//
+//      },
+//        handleShare: function () {
+//
+//      },
+//        handleExecute: function () {
+//        this.fire('executed', this.input);
+//      },
+//        updateProgress: function (progress) {
+//        this.progress = progress;
+//      },
+//
+//        resetProgress: function () {
+//        this.progress = 0;
+//      },
+//        createMapValueListFromInputObject: function (obj, currentMap, result) {
+//
+//        if (Array.isArray(obj)) {
+//          result.push({ map: currentMap, value: obj });
+//        }
+//        else {
+//          for (var key in obj) {
+//            if (obj.hasOwnProperty(key)) {
+//              var map = currentMap + '.' + key;
+//              if (typeof obj[key] === 'object') {
+//                this.createMapValueListFromInputObject(obj[key], map, result);
+//              }
+//              else {
+//                result.push({ map: map, value: obj[key] });
+//              }
+//            }
+//          }
+//        }
+//      },
+//        updateControls: function (input) {
+//        this.input = input;
+//        var mappings = [];
+//        this.createMapValueListFromInputObject(input, 'input', mappings);
+//
+//        for (var i = 0; i < mappings.length; i++) {
+//
+//          this.appendInputUpdate(mappings[i]);
+//        }
+//
+//      },
+//        init: function (yjs) {
+//        this.yjs = yjs;
+//        this.inputInitialized = false;
+//        var self = this;
+//        yjs.share.inputUpdates.observe(function (event) {
+//
+//          if (self.inputInitialized && self.connected) {
+//
+//            if (event.type === 'insert') {
+//
+//              self.appendInputUpdate(event.value);
+//            }
+//
+//          }
+//          // concurrent insertions may result in a history > 7, so cleanup here
+//          self.cleanupInputUpdates();
+//        });
+//
+//        yjs.share.input.observe(function (event) {
+//
+//          if (self.connected) {
+//
+//            if (event.type !== 'delete') {
+//
+//              if (!self.inputInitialized) {
+//                var input = yjs.share.input.get('json')
+//                if (typeof input !== 'undefined') {
+//
+//                  var obj = JSON.parse(input);
+//
+//                  self.updateControls(obj);
+//                  self.inputInitialized = true;
+//                }
+//              }
+//            }
+//
+//          }
+//
+//        });
+//
+//        setTimeout(function () {
+//          if (typeof yjs.share.input.get('json') === 'undefined') {
+//            self.inputInitialized = true;
+//
+//          }
+//        }, 2000);
+//
+//        var chat = this.$$('sweva-visualization-container-chat');
+//        if (chat) {
+//          chat.init(yjs);
+//        }
+//      },
+//        appendInputUpdate: function (element) {
+//        var container = this.$.sections;
+//        var sections = Polymer.dom(container).children;
+//
+//        for (var i = 0; i < sections.length; i++) {
+//          var section = sections[i];
+//          var children = Polymer.dom(section).children;
+//
+//          for (var k = 0; k < children.length; k++) {
+//            var child = children[k];
+//            if (child.map == element.map) {
+//              if (child.value != element.value) {
+//                child.value = element.value;
+//                this.inputUpdate([element.map], element.value, true);
+//              }
+//              return;
+//            }
+//          }
+//        }
+//
+//      },
+//        cleanupInputUpdates: function () {
+//        var len;
+//        while ((len = this.yjs.share.inputUpdates.length) > 10) {
+//          this.yjs.share.inputUpdates.delete(0);
+//        }
+//      }
+//      }
+//
+//      // Register custom element definition using standard platform API
+//      window.customElements.define(SwevaVisualizationInputToggle.is, SwevaVisualizationInputToggle);
         Polymer({
             is: 'sweva-visualization-container-panel',
 
@@ -359,12 +951,8 @@ Example:
                     value: 'User',
                 },
                 usercolor: {
-                    type: Object,
-                    value: {
-                        red: 0,
-                        green: 150,
-                        blue: 136
-                    }
+                    type: String,
+                    value: '#009688'
                 },
                 textToSpeech: {
                     type: Boolean,
@@ -479,31 +1067,11 @@ Example:
                 window.speechSynthesis.speak(msg);
             },
             setUserColor: function (hex) {
-                function hexToRgb(hex) {
-                    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-                    var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-                    hex = hex.replace(shorthandRegex, function (m, r, g, b) {
-                        return r + r + g + g + b + b;
-                    });
-
-                    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-                    return result ? {
-                        r: parseInt(result[1], 16),
-                        g: parseInt(result[2], 16),
-                        b: parseInt(result[3], 16)
-                    } : null;
-                }
-                var color = hexToRgb(hex);
-                var usercolor = {}
-                usercolor.red = color.r;
-                usercolor.green = color.g;
-                usercolor.blue = color.b;
-                this.$$('paper-color-input').value = usercolor;
-                this.$$('paper-color-input').ready();
+                this.$$('paper-swatch-picker').value = hex;
+                this.$$('paper-swatch-picker').ready();
             },
             handleUserUpdateClick: function () {
-                var color = "#" + ((1 << 24) + (this.usercolor.red << 16) + (this.usercolor.green << 8) + this.usercolor.blue).toString(16).slice(1);
-
+                var color = this.userColor;
                 localStorage['userName'] = this.username;
                 localStorage['userColor'] = color;
 

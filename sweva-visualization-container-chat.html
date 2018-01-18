@@ -140,6 +140,7 @@ Example:
             }
 
             connectedCallback() {
+              super.connectedCallback();
               Polymer.RenderStatus.beforeNextRender(this, function() {
                 this._messagesChanged();
               });

@@ -48,60 +48,68 @@ Example:
         <paper-tooltip>{{description}}</paper-tooltip>
     </template>
     <script>
-        Polymer({
-            is: 'sweva-visualization-input-slider',
+      class SwevaVisualizationInputSlider extends Polymer.Element {
 
+        static get is() {
+          return 'sweva-visualization-input-slider';
+        }
+
+        static get properties() {
+          return {
+              /* properties meta data object just like 1.x */
             properties: {
-                label: {
-                    type: String,
-                    value: 'Title'
-                },
-                min: {
-                    type: Number,
-                    value: 0
-                },
-                max: {
-                    type: Number,
-                    value: 100
-                },
-                step: {
-                    type: Number,
-                    value: 1
-                },
-                description: {
-                    type: String,
-                    value: 'No description available.'
-                },
-                map: {
-                    type: String,
-                    value: ''
-                },
-                value: {
-                    type: Number,
-                    value: 50,
-                    notify: true,
-                    //observer: 'valueChanged'
-                }
-            },
-
-            // Element Lifecycle
-
-            ready: function () {
-
-            },
-
-            attached: function () {
-                this.valueChanged();
-            },
-
-            detached: function () {
-
-            },
-            valueChanged: function () {
-                this.fire('controlupdated', { map: this.map, value: this.value });
+              label: {
+                type: String,
+                value: 'Title'
+              },
+              min: {
+                type: Number,
+                value: 0
+              },
+              max: {
+                type: Number,
+                value: 100
+              },
+              step: {
+                type: Number,
+                value: 1
+              },
+              description: {
+                type: String,
+                value: 'No description available.'
+              },
+              map: {
+                type: String,
+                value: ''
+              },
+              value: {
+                type: Number,
+                value: 50,
+                notify: true,
+                //observer: 'valueChanged'
+              }
             }
-            // Element Behavior
+          }
+        }
 
-        });
+        ready() {
+          super.ready();
+        }
+
+        connectedCallback() {
+          super.connectedCallback();
+          Polymer.RenderStatus.beforeNextRender(this, function() {
+            this.valueChanged();
+          });
+        }
+
+        // Element Behavior
+        valueChanged() {
+          this.dispatchEvent(new CustomEvent('controlupdated', { bubbles: true, composed: true , detail: { map: this.map, value: this.value } }));
+        }
+      }
+
+      // Register custom element definition using standard platform API
+      window.customElements.define(SwevaVisualizationInputSlider.is, SwevaVisualizationInputSlider);
     </script>
 </dom-module>

@@ -73,6 +73,7 @@ Example:
         }
 
         connectedCallback() {
+          super.connectedCallback();
           Polymer.RenderStatus.beforeNextRender(this, function() {
             this.valueChanged();
           });
@@ -86,6 +87,5 @@ Example:
 
       // Register custom element definition using standard platform API
       window.customElements.define(SwevaVisualizationInputToggle.is, SwevaVisualizationInputToggle);
-
     </script>
 </dom-module>

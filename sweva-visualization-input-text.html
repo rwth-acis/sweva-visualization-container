@@ -80,7 +80,7 @@ Example:
         }
 
         connectedCallback() {
-
+          super.connectedCallback();
           Polymer.RenderStatus.beforeNextRender(this, function() {
             this.valueChanged();
           });
@@ -92,7 +92,7 @@ Example:
         this._debouncer = Polymer.Debouncer.debounce(this._debouncer, Polymer.Async.timeOut.after(300),
               () => {
             self.dispatchEvent(new CustomEvent('controlupdated', { bubbles: true, composed: true , detail: { map: self.map, value: self.value } }));
-          });
+        });
       }
       }
 
