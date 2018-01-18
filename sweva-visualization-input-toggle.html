@@ -45,25 +45,23 @@ Example:
         static get properties() {
           return {
               /* properties meta data object just like 1.x */
-            properties: {
-              label: {
-                type: String,
-                value: 'Title'
-              },
-              description: {
-                type: String,
-                value: 'No description available.'
-              },
-              map: {
-                type: String,
-                value: ''
-              },
-              value: {
-                type: Boolean,
-                value: false,
-                notify: true,
-                //observer: 'valueChanged'
-              }
+            label: {
+              type: String,
+              value: 'Title'
+            },
+            description: {
+              type: String,
+              value: 'No description available.'
+            },
+            map: {
+              type: String,
+              value: ''
+            },
+            value: {
+              type: Boolean,
+              value: false,
+              notify: true,
+              //observer: 'valueChanged'
             }
           }
         }

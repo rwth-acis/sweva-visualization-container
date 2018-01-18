@@ -1,7 +1,7 @@
 ﻿<link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../paper-tooltip/paper-tooltip.html">
 <link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html">
-<link rel="import" href="../paper-menu/paper-menu.html">
+<link rel="import" href="../paper-menu/paper-menu.html"> <!-- TODO FIX paper menu-->
 <link rel="import" href="../paper-item/paper-item.html">
 <!--
 An element providing a solution to no problem in particular.
@@ -56,7 +56,6 @@ Example:
         static get properties() {
           return {
               /* properties meta data object just like 1.x */
-            properties: {
               label: {
                 type: String,
                 value: 'Title'
@@ -82,9 +81,7 @@ Example:
                 type: String,
                 value: '',
                 notify: true
-
               }
-            }
           }
         }
 

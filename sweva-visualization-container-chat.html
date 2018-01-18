@@ -106,7 +106,6 @@ Example:
             static get properties() {
               return {
                   /* properties meta data object just like 1.x */
-                properties: {
                   messages: {
                     type: Array,
                     value: []
@@ -131,7 +130,6 @@ Example:
                     type: Object,
                     value: null
                   }
-                }
               }
             }
 
@@ -193,7 +191,6 @@ Example:
             }
 
             _messagesChanged() {
-
                 Polymer.dom.flush();  // problem do not know yet how to convert to Polymer 2.0
                 //  this.scrollHeight = this.$$('.message-list').scrollHeight;
                 var container = this.shadowRoot.querySelector('.message-list');
