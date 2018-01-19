@@ -23,7 +23,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 </head>
 <body unresolved>
   <sweva-visualization-container room="swevavisualtest10"
-                                 visualization-url-prefix="http://127.0.0.1:8021/"
+                                 visualization-url-prefix="http://127.0.0.1:8081/components/"
                                  visualization-url-suffix=".html">
   </sweva-visualization-container>
   <script>
@@ -31,191 +31,78 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     var composition = {
       "type": "composition",
-        "name": "composition1",
-        "dataInNames": [],
-        "dataInSchema": {},
-        "dataOutNames": [
-          "result"
-        ],
-        "dataOutSchema": {},
-        "inputNames": [],
-        "inputSchema": {},
-        "mapDataIn": [
-          "function (data, composableName, composables, libs) {",
-          "if (data.hasOwnProperty(composableName)) {",
-          "return libs.get(data, composableName);",
-          "}",
-          "return null;",
-          "}    "
-        ],
-        "mapDataOut": [
-          "function (output, libs) {",
-          "return output;",
-          "}    "
-        ],
-        "mapInput": [
-          "function (input, moduleName, modules, libs) {",
-          "if (input.hasOwnProperty(moduleName)) {",
-          "return libs.get(input, moduleName);",
-          "}",
-          "return null;",
-          "}"
-        ],
-        "composables": {
-          "Provider": {
-            "type": "module",
-            "name": "provider",
-            "description": "A simple module template.",
-            "dataInNames": [],
-            "dataInSchema": {},
-            "dataOutNames": [
-              "data"
-            ],
-            "dataOutSchema": {},
-            "inputNames": [],
-            "inputSchema": {},
-            "request": [
-              "function (data, input, libs) {",
-              "return libs.axios.get('http://localhost:8021/data.json');",
-              "}"
-            ],
-            "response": [
-              "function(request, input, libs) {",
-              "return {data: request.data.data}",
-              "}"
-            ]
-          },
-          "RangeFilter": {
-            "type": "module",
-            "name": "rangefilter",
-            "description": "A simple module template.",
-            "dataInNames": [
-              "in"
-            ],
-            "dataInSchema": {},
-            "dataOutNames": [
-              "data"
-            ],
-            "dataOutSchema": {},
-            "inputNames": [
-              "year"
-            ],
-            "inputSchema": {},
-            "compute": [
-              "function (data, input, libs) {",
-              "",
-              "var d = new Array();",
-              "for(var i=0; i< data.in.length; i++){",
-              "var item = libs.get(data.in,i);",
-              "if(input.year.length>0){",
-              "if(libs.get(item,0).indexOf(input.year)==0){",
-              "d.push(item);",
-              "}",
-              "}",
-              "else{",
-              "d.push(item);",
-              "}",
-              "}",
-              "",
-              "return { data:d };",
-              "}"
-            ]
-          },
-          "View": {
+      "name": "composition1",
+      "dataInNames": [],
+      "dataInSchema": {},
+      "dataOutNames": [
+        "result"
+      ],
+      "dataOutSchema": {},
+      "inputNames": [],
+      "inputSchema": {},
+      "mapDataIn": [
+        "function (data, composableName, composables, libs) {",
+        "if (data.hasOwnProperty(composableName)) {",
+        "return libs.get(data, composableName);",
+        "}",
+        "return null;",
+        "}"
+      ],
+      "mapDataOut": [
+        "function (output, libs) {",
+        "return output;",
+        "}"
+      ],
+      "mapInput": [
+        "function (input, moduleName, modules, libs) {",
+        "if (input.hasOwnProperty(moduleName)) {",
+        "return libs.get(input, moduleName);",
+        "}",
+        "return null;",
+        "}"
+      ],
+      "composables": {
+        "Node106": {
           "type": "module",
-          "name": "graphview",
+          "name": "code_frequency",
           "description": "A simple module template.",
-          "dataInNames": [
-            "in"
-          ],
+          "dataInNames": [],
           "dataInSchema": {},
           "dataOutNames": [
-            "result"
+            "code_frequency"
           ],
           "dataOutSchema": {},
           "inputNames": [
-            "lines",
-            "title"
+            "repository"
           ],
           "inputSchema": {},
-          "compute": [
+          "request": [
             "function (data, input, libs) {",
             "",
-            "var graph = new Array();",
-            "graph.push({",
-            "label: 'electricity',",
-            "color: '#ff0000',",
-            "type: input.lines?'lines':'dots',",
-            "data: data.in",
-            "});",
-            "var config = {",
-            "label: input.title,",
-            "ylabel: 'million kilowatt hours',",
-            "xlabel: 'date',",
-            "xtype: 'date',",
-            "ytype: 'linear',",
-            "xparse: '%Y-%m',",
-            "xprint: '%m-%y',",
-            "};",
-            "return {config:config, data:graph};",
+            "var repo = 'LAS2peer';",
+            "",
+            "if(input.repository){",
+            "repo = input.repository;",
+            "}",
+            "console.log(repo)",
+            "return libs.axios.get('https://api.github.com/repos/rwth-acis/'+repo+'/stats/code_frequency');",
+            "}    "
+          ],
+          "response": [
+            "function (response, input, libs) {",
+            "return { code_frequency:response.data }",
             "}"
           ]
-          }
-        },
-        "links": {
-          "Provider": [
-            {
-              "to": "RangeFilter",
-              "mapping": {
-                "data": "in"
-              }
-            }
-          ],
-          "RangeFilter": [
-            {
-              "to": "View",
-              "mapping": {
-                "data": "in"
-              }
-            }
-          ]
-        },
-        "controls": [
-          {
-            "label": "Main",
-            "controls": [
-              {
-                "type": "number",
-                "label": "Year",
-                "description": "",
-                "value": "1990",
-                "min": "1956",
-                "max": "1994",
-                "map": [
-                  "input.RangeFilter.year"
-                ]
-              },
-              {
-                "type": "toggle",
-                "label": "Draw Line",
-                "description": "",
-                "value": true,
-                "map": [
-                  "input.View.lines"
-                ]
-              },
-              {
-                "type": "fixed",
-                "description": "",
-                "value": "Diagram",
-                "map": [
-                  "input.View.title"
-                ]
-              }
-            ]
-          }
-        ],
-        "visualization": "sweva-visualization-raw/dist/sweva-visualization-raw"
+        }
+      },
+      "links": {},
+      "controls": [
+        {
+          "label": "Section1",
+          "controls": []
+        }
+      ],
+      "visualization": "sweva-visualization-raw/dist/sweva-visualization-raw"
     };
         
     container.addEventListener('initialized', function () { container.load(composition); }, false);
