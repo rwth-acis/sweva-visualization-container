@@ -228,7 +228,7 @@ Example:
         var sameControls = true;
 
         if (typeof composition === 'object') {
-          var jsonString= JSON.stringify(composition)
+          var jsonString = JSON.stringify(composition)
           if (jsonString != this.oldComposition) {
             this.oldComposition = jsonString;
 
@@ -242,8 +242,7 @@ Example:
 
           if (this.composition.controls) {
             this.$.panel.sections = this.composition.controls;
-          }
-          else {
+          } else {
             this.$.panel.sections = this.controls;
           }
           if (this.composition.visualization) {
@@ -256,14 +255,11 @@ Example:
           var self = this;
           if (!sameTool) {
             var url = this.toolUrl;
-            this.loadVisualizationTool(this.toolUrl)
-              .then(function () {
-
-                console.log(url + ' loaded!');
-                self.execute();
-              });
-          }
-          else {
+            this.loadVisualizationTool(this.toolUrl).then(function () {
+              console.log(url + ' loaded!');
+              self.execute();
+            });
+          } else {
             this.execute();
           }
 
