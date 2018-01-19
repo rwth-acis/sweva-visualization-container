@@ -223,11 +223,9 @@ Example:
           errorConsole.clear();
         }
 
-
         var sameTool = true;
         var sameComposition = true;
         var sameControls = true;
-
 
         if (typeof composition === 'object') {
           var jsonString= JSON.stringify(composition)
@@ -253,7 +251,6 @@ Example:
               this.toolUrl = this.composition.visualization;
               sameTool = false;
             }
-
           }
 
           var self = this;
