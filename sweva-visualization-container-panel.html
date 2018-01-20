@@ -119,9 +119,6 @@ Example:
                 margin-bottom: 5px;
             }
 
-            paper-color-input {
-                margin: 0 8px;
-            }
 
             sweva-visualization-container-section paper-button {
                 margin: 8px;
@@ -280,7 +277,7 @@ Example:
                                                             value="{{username}}">
                             </sweva-visualization-input-text>
                             <div style="padding: 0 8px">
-                                <paper-swatch-picker  color="{{usercolor}}">Color</paper-swatch-picker>
+                                Color<paper-swatch-picker  color="{{usercolor}}" label="Text"></paper-swatch-picker>
                             </div>
                             <paper-button on-click="handleUserUpdateClick">Update</paper-button>
                         </sweva-visualization-container-section>
@@ -431,7 +428,8 @@ Example:
             }
 
             if (typeof localStorage['userColor'] !== 'undefined' && localStorage['userColor'] != null) {
-              this.setUserColor(localStorage['userColor']);
+             // this.setUserColor(localStorage['userColor']);
+              this.usercolor = localStorage['userColor'];
             }
             else {
               localStorage['userColor'] = this.usercolor;
@@ -478,19 +476,13 @@ Example:
             window.speechSynthesis.speak(msg);
         }
 
-        setUserColor(hex) {
-            this.shadowRoot.querySelector('paper-swatch-picker').value = hex;
-            this.shadowRoot.querySelector('paper-swatch-picker').ready();
-        }
-
         handleUserUpdateClick() {
-            var color = this.userColor;
             localStorage['userName'] = this.username;
-            localStorage['userColor'] = color;
+            localStorage['userColor'] = this.usercolor;
 
             var chat = this.shadowRoot.querySelector('sweva-visualization-container-chat');
             if (chat) {
-              chat.updateUser({ name: this.username, color: color });
+              chat.updateUser({ name: this.username, color: this.usercolor });
             }
         }
 
