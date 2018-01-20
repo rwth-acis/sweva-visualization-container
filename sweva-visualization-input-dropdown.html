@@ -1,7 +1,7 @@
 ﻿<link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../paper-tooltip/paper-tooltip.html">
 <link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html">
-<link rel="import" href="../paper-menu/paper-menu.html"> <!-- TODO FIX paper menu-->
+<link rel="import" href="../paper-listbox/paper-listbox.html">
 <link rel="import" href="../paper-item/paper-item.html">
 <!--
 An element providing a solution to no problem in particular.
@@ -36,13 +36,13 @@ Example:
             }
         </style>
         <paper-dropdown-menu label="{{label}}">
-            <paper-menu class="dropdown-content" selected="{{selectedIndex}}">
+            <paper-listbox slot="dropdown-content" selected="{{selectedIndex}}">
                 <template is="dom-repeat" items="{{itemsPreprocess(items)}}">
                     <paper-item>
                         <span label="{{item.label}}">{{item.text}}</span>
                     </paper-item>
                 </template>
-            </paper-menu>
+            </paper-listbox>
         </paper-dropdown-menu>
         <paper-tooltip>{{description}}</paper-tooltip>
     </template>
