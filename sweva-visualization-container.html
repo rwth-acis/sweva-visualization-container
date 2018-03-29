@@ -215,6 +215,11 @@ Example:
             self.result = result;
             self.updateVisualization();
           });
+        this.executionManager.addReexecutionListener( function (result) {
+              self.result = result;
+              self.updateVisualization();
+          }
+        );
       }
 
       load(composition) {
