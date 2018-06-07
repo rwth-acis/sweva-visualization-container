@@ -215,7 +215,7 @@ Example:
             self.result = result;
             self.updateVisualization();
           });
-        this.executionManager.addReexecutionListener( function (result) {
+        this.executionManager.onMQTTDataRecieved( function (result) {
               self.result = result;
               self.updateVisualization();
           }
