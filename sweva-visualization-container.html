@@ -52,6 +52,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     <div class="container">
       <div id="visualization-area">
+
       </div>
       <sweva-visualization-container-panel id="panel"
                                            on-inputchanged="handleInputChanged"
@@ -145,6 +146,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
 
       ready() {
+        //todo: does this work ?
         super.ready();
         this.executionManager = new sweva.ExecutionManager();
         var self = this;
