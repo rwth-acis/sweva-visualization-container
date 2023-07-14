@@ -41,18 +41,31 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         height: calc(100% - 50px);
         margin-bottom: 50px;
       }
-
+      .log-container {
+        margin-top: 10px;
+        position: relative;
+      }
       #visualization-area {
         flex: 1 1 0;
         background: #ffffff;
         overflow: auto;
         position: relative;
       }
+
+      #loading-bar {
+        width: 5%;
+        height: 10px;
+        background-color: #ffa500;
+        transition: width 0.3s ease-in-out;
+      }
+
     </style>
 
     <div class="container">
-      <div id="visualization-area">
+      <div id="loading-bar"></div>
 
+      <div id="visualization-area">
+        <div id="console-log"></div>
       </div>
       <sweva-visualization-container-panel id="panel"
                                            on-inputchanged="handleInputChanged"
@@ -65,7 +78,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </sweva-error-console>
   </template>
 
+
   <script>
+
     class SwevaVisualizationContainer extends Polymer.Element {
 
       static get is() {
@@ -146,15 +161,130 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
 
       ready() {
-        //todo: does this work ?
         super.ready();
         this.executionManager = new sweva.ExecutionManager();
         var self = this;
-        this.executionManager.onProgress(function (progress) {
+        this.executionManager.onProgress(function(progress) {
+          console.log("Progress "+progress+"%");
           var panel = self.$.panel;
           panel.updateProgress(progress);
+
         });
+
+        var visualizationArea = this.shadowRoot.querySelector('#visualization-area');
+
+        // Create a separate div for the loading bar and log container
+        var loadingContainer = document.createElement('div');
+        loadingContainer.classList.add('loading-container');
+
+        // Create the loading bar
+        var loadingBar = document.createElement('div');
+        loadingBar.id = 'loading-bar';
+        loadingBar.style.width = '0%';
+        loadingBar.style.height = '10px';
+        loadingBar.style.backgroundColor = '#ffa500';
+        loadingBar.style.transition = 'width 0.3s ease-in-out';
+
+        loadingContainer.appendChild(loadingBar);
+        visualizationArea.appendChild(loadingContainer);
+
+        // Intercept console.log() statements
+        var originalConsoleLog = console.log;
+
+        let startTimeOffloading =0;
+        let startMemOffloading = 0;
+
+        let endTimeOffloading =0;
+        let endMemOffloading = 0;
+        let endTotalMem=0;
+        let startTotalTime = 0;
+        let startTotalMem = 0;
+
+        console.log = function() {
+          var args = Array.from(arguments);
+
+          // Loading bar
+          if (args.some(arg => typeof arg === 'string' && arg.includes('Progress'))) {
+            let logMessageBar = args.map(arg => {
+              if (typeof arg === 'object') {
+                return JSON.stringify(arg);
+              }
+              return arg;
+            }).join(' ');
+
+            // Extract the percentage from the log message
+            var percentage = logMessageBar.match(/\d+/);
+            if (percentage) {
+              var percentValue = parseInt(percentage[0]);
+              if (!isNaN(percentValue)) {
+                // Update the loading bar width based on the percentage
+                loadingBar.style.width = percentValue + '%';
+              }
+            }
+          }
+
+          // Test msgs
+          if (args.some(arg => typeof arg === 'string' && arg.includes('offloadingOutput'))) {
+            let logMessageText = args.map(arg => {
+              if (typeof arg === 'string' && arg.includes('offloadingOutput')) {
+                return arg.split('$')[1].trim();
+              }
+              return arg;
+            }).join(' ');
+
+            // Create a new div element and append the log message
+            var logContainer = document.createElement('div');
+            logContainer.classList.add('log-container');
+            var paragraph = document.createElement('p');
+            paragraph.innerHTML = logMessageText;
+            logContainer.appendChild(paragraph);
+            visualizationArea.appendChild(logContainer);
+          }
+
+          if (args.some(arg => typeof arg === 'string' && arg.includes('begin the execution'))) {
+
+            startTotalMem = performance.memory.usedJSHeapSize;
+            startTotalTime = Date.now();
+          }
+
+          if (args.some(arg => typeof arg === 'string' && arg.includes('broadcasting to discovery network....'))) {
+
+            startMemOffloading = performance.memory.usedJSHeapSize;
+            startTimeOffloading = Date.now();
+          }
+
+          if (args.some(arg => typeof arg === 'string' && arg.includes('===== Recieved offloaded Result ====='))) {
+            endTimeOffloading = Date.now();
+            endMemOffloading= performance.memory.usedJSHeapSize;
+            endTotalMem = endMemOffloading;
+
+            if (endMemOffloading < startMemOffloading) {
+              let temp = endMemOffloading;
+              endMemOffloading = startMemOffloading;
+              startMemOffloading = temp;
+            }
+            if (endTotalMem < startTotalMem) {
+              let temp = endTotalMem;
+              endTotalMem = startMemOffloading;
+              startTotalMem = temp;
+            }
+
+            console.log('offloadingOutput$ Offloading time: ',formatTime(endTimeOffloading-startTimeOffloading),' (',endTimeOffloading-startTimeOffloading,' ms)');
+            console.log('offloadingOutput$ Offloading Memory: ',formatBytes(endMemOffloading-startMemOffloading),' (',endMemOffloading-startMemOffloading,' bytes)');
+            console.log('offloadingOutput$ Total execution time: ',formatTime(endTimeOffloading-startTotalTime),' (',endTimeOffloading-startTotalTime,' ms)');
+            console.log('offloadingOutput$ Total used Memory: ',formatBytes(endTotalMem-startTotalMem),' (',endTotalMem-startTotalMem,' bytes)');
+          }
+
+
+          // Call the original console.log() function
+          originalConsoleLog.apply(console, args);
+
+
+        };
       }
+
+
+
 
       connectedCallback() {
         super.connectedCallback();
@@ -195,12 +325,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         var panel = this.$.panel;
         panel.resetProgress();
 
+
+        let startMemExecute = performance.memory.usedJSHeapSize;
+        let startTimeExecute = Date.now();
         this.executionManager.execute(
           {},
           input
         ).then(function (result) {
+          let endTimeExecute = Date.now();
+          let endMemExecute = performance.memory.usedJSHeapSize;
             self.result = result;
             self.updateVisualization();
+
+          if (endMemExecute < startMemExecute) {
+            let temp = endMemExecute;
+            endMemExecute = startMemExecute;
+            startMemExecute = temp;
+          }
+
+          console.log('offloadingOutput$ Execution time: ',formatTime(endTimeExecute-startTimeExecute),' (',endTimeExecute-startTimeExecute,' ms)');
+          console.log('offloadingOutput$ Execution Memory: ',formatBytes(endMemExecute-startMemExecute),' (',endMemExecute-startMemExecute,' bytes)');
           });
         this.executionManager.onMQTTDataRecieved( function (result) {
               self.result = result;
@@ -210,6 +354,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
 
       load(composition) {
+        sweva.ExecutionManager.setInitialIntermediatePipeline(composition);
         var errorConsole = this.shadowRoot.querySelector('#error-console');
         if (errorConsole) {
           errorConsole.clear();
@@ -230,6 +375,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         }
         if (!sameComposition) {
+
           this.executionManager.setup(this.composition);
 
           if (this.composition.controls) {
@@ -356,7 +502,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               // debug: true,
               url: self.yjsServer
             },
-            sourceDir: /*'../../bower_components/',//*/'http://127.0.0.1:8021/yjs/bower_components',
+            sourceDir: /*'../../bower_components/',//*/'http://0.0.0.0:8021/yjs/bower_components',
             share: {
 
               chat: 'Array',
@@ -387,6 +533,38 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     }
 
+    function formatBytes(bytes, decimals = 2) {
+      if (bytes === 0) {
+        return '0 Bytes';
+      }
+
+      const k = 1024;
+      const dm = decimals < 0 ? 0 : decimals;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      const size = parseFloat((bytes / Math.pow(k, i)).toFixed(dm));
+
+      if (!isNaN(size)) {
+        return `${size} ${sizes[i]}`;
+      }
+    }
+
+
+    function formatTime(milliseconds) {
+      const seconds = Math.floor(milliseconds / 1000) % 60;
+      const minutes = Math.floor(milliseconds / (1000 * 60)) % 60;
+
+      const formattedTime = [];
+
+      if (minutes > 0) {
+        formattedTime.push(minutes + (minutes === 1 ? ' minute' : ' minutes'));
+      }
+      if (seconds >0){
+        formattedTime.push(seconds + (seconds === 1 ? ' second' : ' seconds'));
+      }
+      return formattedTime.join(', ');
+    }
     // Register custom element definition using standard platform API
     window.customElements.define(SwevaVisualizationContainer.is, SwevaVisualizationContainer);
   </script>

@@ -148,6 +148,7 @@
 
         var self = this;
         console.log = function () {
+
           if (arguments.length === 1 && typeof arguments[0] == 'string') {
             if (arguments[0].indexOf('SwevaError') >= 0) {
               self.add(arguments[0].split('\n')[0], arguments[0]);
